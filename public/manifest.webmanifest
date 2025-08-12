@@ -1,0 +1,13 @@
+{
+  "name": "FishDvizh",
+  "short_name": "FishDvizh",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#0b7285",
+  "background_color": "#ffffff",
+  "description": "SPA для рыболовного спорта",
+  "icons": []
+}
+
+
