@@ -1,4 +1,4 @@
-import { Badge, Button, Container, Group, Paper, Stack, Text } from '@mantine/core'
+import { Badge, Button, Container, Group, Paper, Stack, Text, Drawer } from '@mantine/core'
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet'
 import L, { type LatLngExpression } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -8,6 +8,7 @@ import { CreateCompetitionModal } from '../features/competitions/CreateCompetiti
 import { EditCompetitionModal } from '../features/competitions/EditCompetitionModal'
 import { useCompetitions, useDeleteCompetition } from '../features/competitions/hooks'
 import { notifications } from '@mantine/notifications'
+import { useDisclosure } from '@mantine/hooks'
 
 // Fix default marker icons path in Vite
 import iconUrl from 'leaflet/dist/images/marker-icon.png'
@@ -25,32 +26,20 @@ L.Marker.prototype.options.icon = defaultIcon
 
 const MINSK: LatLngExpression = [53.9, 27.5667]
 
-function MapClickHandler() {
-  const [tempMarker, setTempMarker] = useState<L.LatLng | null>(null)
+function MapClickHandler({ onClick }: { onClick: (latlng: L.LatLng) => void }) {
   useMapEvents({
     click(e) {
-      setTempMarker(e.latlng)
-      modals.open({
-        title: 'Новое соревнование',
-        children: (
-          <CreateCompetitionModal
-            lat={e.latlng.lat}
-            lng={e.latlng.lng}
-            onClose={() => modals.closeAll()}
-          />
-        ),
-        onClose: () => setTempMarker(null),
-      })
+      onClick(e.latlng)
     },
   })
-  return tempMarker ? (
-    <Marker position={tempMarker as unknown as LatLngExpression} />
-  ) : null
+  return null
 }
 
 export default function MapPage() {
   const { data: competitions } = useCompetitions()
   const { mutateAsync: deleteCompetition } = useDeleteCompetition()
+  const [tempMarker, setTempMarker] = useState<L.LatLng | null>(null)
+  const [createOpened, { open: openCreate, close: closeCreate }] = useDisclosure(false)
 
   function openEditModal(c: any) {
     modals.open({
@@ -103,6 +92,7 @@ export default function MapPage() {
                   <Badge variant="light" w="fit-content">
                     {new Date(c.starts_at).toLocaleString()}
                   </Badge>
+                  {/* Для отображения названий можно сделать join или отдельный запрос по связям */}
                   {c.description && (
                     <Text size="sm" c="dimmed" lineClamp={3}>
                       {c.description}
@@ -120,9 +110,28 @@ export default function MapPage() {
               </Popup>
             </Marker>
           ))}
-          <MapClickHandler />
+          {tempMarker && (
+            <Marker position={tempMarker as unknown as LatLngExpression} />
+          )}
+          <MapClickHandler onClick={(latlng) => { setTempMarker(latlng); openCreate() }} />
         </MapContainer>
       </Paper>
+      <Drawer
+        opened={createOpened}
+        onClose={() => { closeCreate(); setTempMarker(null) }}
+        position="right"
+        size={420}
+        title="Новое соревнование"
+        withinPortal
+      >
+        {tempMarker && (
+          <CreateCompetitionModal
+            lat={tempMarker.lat}
+            lng={tempMarker.lng}
+            onClose={() => { closeCreate(); setTempMarker(null) }}
+          />
+        )}
+      </Drawer>
     </Container>
   )
 }

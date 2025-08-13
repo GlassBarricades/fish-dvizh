@@ -1,4 +1,4 @@
-import { AppShell, Group, Burger, UnstyledButton, Button, ActionIcon, useMantineColorScheme, Text } from '@mantine/core'
+import { AppShell, Group, Burger, UnstyledButton, Button, ActionIcon, useMantineColorScheme, Text, Badge } from '@mantine/core'
 import classes from './App.module.css';
 import { useDisclosure } from '@mantine/hooks';
 import { useAuth } from './features/auth/hooks'
@@ -30,8 +30,14 @@ function App() {
             <Group ml="xl" gap={8} visibleFrom="sm">
               <UnstyledButton className={classes.control} component={Link} to="/">Home</UnstyledButton>
               <UnstyledButton className={classes.control} component={Link} to="/map">Map</UnstyledButton>
+              {user && (user as any)?.user_metadata?.role === 'admin' && (
+                <UnstyledButton className={classes.control} component={Link} to="/admin">Admin</UnstyledButton>
+              )}
               {user ? (
                 <>
+                  <Badge variant="light" color="gray" mr="sm">
+                    {(user as any)?.user_metadata?.role ?? 'user'}
+                  </Badge>
                   <Text size="sm" c="dimmed" mx="md">{user.email}</Text>
                   <Button variant="light" onClick={() => supabase.auth.signOut()}>Выйти</Button>
                 </>

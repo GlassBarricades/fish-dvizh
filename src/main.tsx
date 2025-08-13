@@ -11,6 +11,7 @@ import { store } from './store/store'
 import './index.css'
 import App from './App'
 import { AuthProvider } from './features/auth/AuthProvider'
+import { AuthGate } from './features/auth/AuthGate'
 import { registerSW } from 'virtual:pwa-register'
 import '@mantine/core/styles.css'
 import '@mantine/notifications/styles.css'
@@ -23,13 +24,31 @@ const AuthPage = lazy(() => import('./pages/AuthPage'))
 const CheckEmailPage = lazy(() => import('./pages/CheckEmailPage'))
 const HomePage = lazy(() => import('./pages/HomePage'))
 const MapPage = lazy(() => import('./pages/MapPage'))
+const AdminPage = lazy(() => import('./pages/AdminPage'))
+const AdminUsersPage = lazy(() => import('./pages/admin/UsersPage'))
+const AdminDictsPage = lazy(() => import('./pages/admin/DictsPage'))
+const FishKindsPage = lazy(() => import('./pages/admin/FishKindsPage'))
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
+    element: (
+      <AuthGate>
+        <App />
+      </AuthGate>
+    ),
     children: [
       { index: true, element: <Suspense fallback={null}><HomePage /></Suspense> },
       { path: 'map', element: <Suspense fallback={null}><MapPage /></Suspense> },
+      {
+        path: 'admin',
+        element: <AuthGate roles={["admin"]}><Suspense fallback={null}><AdminPage /></Suspense></AuthGate>,
+        children: [
+          { index: true, element: <Suspense fallback={null}><AdminUsersPage /></Suspense> },
+          { path: 'users', element: <Suspense fallback={null}><AdminUsersPage /></Suspense> },
+          { path: 'dicts', element: <Suspense fallback={null}><AdminDictsPage /></Suspense> },
+          { path: 'dicts/fish', element: <Suspense fallback={null}><FishKindsPage /></Suspense> },
+        ],
+      },
     ],
   },
   { path: '/auth', element: <Suspense fallback={null}><AuthPage /></Suspense> },

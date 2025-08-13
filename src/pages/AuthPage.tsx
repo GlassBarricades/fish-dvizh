@@ -12,6 +12,7 @@ export default function AuthPage() {
   const [regEmail, setRegEmail] = useState('')
   const [regPassword, setRegPassword] = useState('')
   const [nickname, setNickname] = useState('')
+  const [role, setRole] = useState<'organizer' | 'user'>('user')
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
@@ -42,6 +43,7 @@ export default function AuthPage() {
           data: {
             nickname: nickname.trim(),
             phone: phone.trim() || undefined,
+            role,
           },
         },
       })
@@ -89,6 +91,11 @@ export default function AuthPage() {
                 <TextInput label="Телефон (опционально)" value={phone} onChange={(e) => setPhone(e.currentTarget.value)} />
                 <TextInput label="Email" value={regEmail} onChange={(e) => setRegEmail(e.currentTarget.value)} />
                 <PasswordInput label="Пароль" value={regPassword} onChange={(e) => setRegPassword(e.currentTarget.value)} />
+                <Text size="sm" c="dimmed">Роль (по умолчанию «user», «organizer» для организаторов)</Text>
+                <Group>
+                  <Button size="xs" variant={role === 'user' ? 'filled' : 'light'} onClick={() => setRole('user')}>user</Button>
+                  <Button size="xs" variant={role === 'organizer' ? 'filled' : 'light'} onClick={() => setRole('organizer')}>organizer</Button>
+                </Group>
                 <Group>
                   <Button variant="light" onClick={handleSignUp} loading={loading}>
                     Регистрация

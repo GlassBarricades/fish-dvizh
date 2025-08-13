@@ -25,4 +25,9 @@ export type UpdateCompetitionInput = {
   lng?: number
 }
 
+export type CompetitionFishKind = {
+  competition_id: string
+  fish_kind_id: string
+}
+
 
