@@ -5,7 +5,8 @@
   ],
   "routes": [
     { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    { "src": "/(.*)", "dest": "/index.html" },
+    { "src": "/manifest.webmanifest", "dest": "/manifest.webmanifest" }
   ]
 }
 
