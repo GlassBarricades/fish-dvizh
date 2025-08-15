@@ -5,6 +5,7 @@ export type Competition = {
   starts_at: string // ISO datetime
   lat: number
   lng: number
+  format_id?: string | null
   created_at: string
   created_by?: string | null
 }
@@ -15,6 +16,7 @@ export type CreateCompetitionInput = {
   starts_at: string // ISO datetime
   lat: number
   lng: number
+  format_id: string
 }
 
 export type UpdateCompetitionInput = {
@@ -23,6 +25,7 @@ export type UpdateCompetitionInput = {
   starts_at?: string // ISO datetime
   lat?: number
   lng?: number
+  format_id?: string | null
 }
 
 export type CompetitionFishKind = {

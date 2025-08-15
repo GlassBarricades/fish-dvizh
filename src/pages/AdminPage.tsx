@@ -22,7 +22,10 @@ export default function AdminPage() {
           <Paper withBorder radius="md" p="md" w={260} visibleFrom="sm">
             <Stack gap="xs">
               <NavLink component={Link} to="/admin/users" label="Пользователи" active={active('/admin/users')} />
-              <NavLink component={Link} to="/admin/dicts" label="Справочники" active={active('/admin/dicts')} />
+              <NavLink component={Link} to="/admin/dicts" label="Справочники">
+                <NavLink component={Link} to="/admin/dicts/fish" label="Виды рыбы" active={active('/admin/dicts/fish')} />
+                <NavLink component={Link} to="/admin/dicts/formats" label="Форматы соревнований" active={active('/admin/dicts/formats')} />
+              </NavLink>
             </Stack>
           </Paper>
         )}
@@ -35,7 +38,10 @@ export default function AdminPage() {
       <Drawer opened={mobileOpened} onClose={closeMobile} title="Меню" size={280} padding="md" hiddenFrom="sm">
         <Stack gap="xs">
           <NavLink component={Link} to="/admin/users" label="Пользователи" active={active('/admin/users')} onClick={closeMobile} />
-          <NavLink component={Link} to="/admin/dicts" label="Справочники" active={active('/admin/dicts')} onClick={closeMobile} />
+          <NavLink component={Link} to="/admin/dicts" label="Справочники">
+            <NavLink component={Link} to="/admin/dicts/fish" label="Виды рыбы" active={active('/admin/dicts/fish')} onClick={closeMobile} />
+            <NavLink component={Link} to="/admin/dicts/formats" label="Форматы соревнований" active={active('/admin/dicts/formats')} onClick={closeMobile} />
+          </NavLink>
         </Stack>
       </Drawer>
     </Container>

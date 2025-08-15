@@ -1,0 +1,79 @@
+export type Team = {
+  id: string
+  name: string
+  description?: string | null
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+export type TeamRole = 'member' | 'captain' | 'creator'
+
+export type TeamMember = {
+  id: string
+  team_id: string
+  user_id: string
+  role: TeamRole
+  joined_at: string
+  user_email?: string
+  user_nickname?: string
+}
+
+export type TeamInvitation = {
+  id: string
+  team_id: string
+  invited_user_id: string
+  invited_by: string
+  role: TeamRole // Роль, с которой пользователь будет добавлен в команду
+  status: 'pending' | 'accepted' | 'declined'
+  created_at: string
+  expires_at: string
+  invited_user_email?: string
+  invited_user_nickname?: string
+  // Дополнительные поля для отображения
+  team_name?: string
+  team_description?: string
+  invited_by_email?: string
+  invited_by_nickname?: string
+}
+
+export type CreateTeamInput = {
+  name: string
+  description?: string
+  created_by: string
+}
+
+export type UpdateTeamInput = {
+  name?: string
+  description?: string
+}
+
+export type CreateInvitationInput = {
+  team_id: string
+  invited_user_email: string
+  invited_by: string // ID пользователя, который отправляет приглашение
+  role: TeamRole // Роль, с которой пользователь будет добавлен в команду
+}
+
+export type AcceptInvitationInput = {
+  invitation_id: string
+  accept: boolean
+}
+
+export type TeamParticipation = {
+  id: string
+  team_id: string
+  competition_id: string
+  status: 'registered' | 'confirmed' | 'rejected'
+  registered_at: string
+  confirmed_at?: string | null
+}
+
+export type CreateTeamParticipationInput = {
+  team_id: string
+  competition_id: string
+}
+
+export type UpdateTeamParticipationInput = {
+  status?: 'registered' | 'confirmed' | 'rejected'
+}

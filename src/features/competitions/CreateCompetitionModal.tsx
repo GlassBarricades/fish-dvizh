@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Button, Group, MultiSelect, Stack, TextInput, Textarea } from '@mantine/core'
+import { Button, Group, MultiSelect, Stack, TextInput, Textarea, Select } from '@mantine/core'
 import { DateTimePicker } from '@mantine/dates'
 import dayjs from 'dayjs'
 import { useCreateCompetition, useSetCompetitionFishKinds } from './hooks'
 import { useFishKinds } from '../dicts/fish/hooks'
+import { useCompetitionFormats } from '../dicts/formats/hooks'
 import { notifications } from '@mantine/notifications'
 
 type Props = {
@@ -19,11 +20,13 @@ export function CreateCompetitionModal({ lat, lng, onClose }: Props) {
   const { mutateAsync, isPending } = useCreateCompetition()
   const { mutateAsync: setFishKinds } = useSetCompetitionFishKinds()
   const { data: fishKinds } = useFishKinds()
+  const { data: formats } = useCompetitionFormats()
   const [fishKindIds, setFishKindIds] = useState<string[]>([])
+  const [formatId, setFormatId] = useState<string | null>(null)
 
   async function handleSubmit() {
-    if (!title.trim() || !startsAt || fishKindIds.length === 0) {
-      notifications.show({ color: 'red', message: 'Заполните название, дату/время и выберите виды рыбы' })
+    if (!title.trim() || !startsAt || fishKindIds.length === 0 || !formatId) {
+      notifications.show({ color: 'red', message: 'Заполните название, дату/время, выберите виды рыбы и формат' })
       return
     }
     try {
@@ -33,6 +36,7 @@ export function CreateCompetitionModal({ lat, lng, onClose }: Props) {
         starts_at: startsAt,
         lat,
         lng,
+        format_id: formatId,
       })
       await setFishKinds({ competitionId: created.id, fishKindIds })
       notifications.show({ color: 'green', message: 'Соревнование создано' })
@@ -51,6 +55,16 @@ export function CreateCompetitionModal({ lat, lng, onClose }: Props) {
         onChange={setStartsAt}
         required
         popoverProps={{ zIndex: 10001, withinPortal: true }}
+      />
+      <Select
+        label="Формат соревнования"
+        placeholder="Выберите формат"
+        data={(formats ?? []).map((f) => ({ value: f.id, label: f.name }))}
+        value={formatId}
+        onChange={setFormatId}
+        searchable
+        nothingFoundMessage="Нет данных"
+        required
       />
       <Textarea label="Описание" value={description} onChange={(e) => setDescription(e.currentTarget.value)} minRows={3} />
       <MultiSelect

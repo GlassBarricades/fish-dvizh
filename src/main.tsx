@@ -24,10 +24,13 @@ const AuthPage = lazy(() => import('./pages/AuthPage'))
 const CheckEmailPage = lazy(() => import('./pages/CheckEmailPage'))
 const HomePage = lazy(() => import('./pages/HomePage'))
 const MapPage = lazy(() => import('./pages/MapPage'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const TeamPage = lazy(() => import('./pages/TeamPage'))
 const AdminPage = lazy(() => import('./pages/AdminPage'))
 const AdminUsersPage = lazy(() => import('./pages/admin/UsersPage'))
 const AdminDictsPage = lazy(() => import('./pages/admin/DictsPage'))
 const FishKindsPage = lazy(() => import('./pages/admin/FishKindsPage'))
+const CompetitionFormatsPage = lazy(() => import('./pages/admin/CompetitionFormatsPage'))
 const router = createBrowserRouter([
   {
     path: '/',
@@ -39,6 +42,8 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Suspense fallback={null}><HomePage /></Suspense> },
       { path: 'map', element: <Suspense fallback={null}><MapPage /></Suspense> },
+      { path: 'profile', element: <Suspense fallback={null}><ProfilePage /></Suspense> },
+      { path: 'team/:teamId', element: <Suspense fallback={null}><TeamPage /></Suspense> },
       {
         path: 'admin',
         element: <AuthGate roles={["admin"]}><Suspense fallback={null}><AdminPage /></Suspense></AuthGate>,
@@ -47,6 +52,7 @@ const router = createBrowserRouter([
           { path: 'users', element: <Suspense fallback={null}><AdminUsersPage /></Suspense> },
           { path: 'dicts', element: <Suspense fallback={null}><AdminDictsPage /></Suspense> },
           { path: 'dicts/fish', element: <Suspense fallback={null}><FishKindsPage /></Suspense> },
+          { path: 'dicts/formats', element: <Suspense fallback={null}><CompetitionFormatsPage /></Suspense> },
         ],
       },
     ],

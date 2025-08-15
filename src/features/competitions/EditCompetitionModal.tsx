@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Button, Group, MultiSelect, Stack, TextInput, Textarea } from '@mantine/core'
+import { Button, Group, MultiSelect, Stack, TextInput, Textarea, Select } from '@mantine/core'
 import { DateTimePicker } from '@mantine/dates'
 import { useDeleteCompetition, useSetCompetitionFishKinds, useUpdateCompetition, useCompetitionFishKinds } from './hooks'
 import { useFishKinds } from '../dicts/fish/hooks'
+import { useCompetitionFormats } from '../dicts/formats/hooks'
 
 type Props = {
   id: string
@@ -12,6 +13,7 @@ type Props = {
   lat: number
   lng: number
   fish_kind_id?: string | null
+  format_id?: string | null
   onClose: () => void
 }
 
@@ -22,13 +24,15 @@ export function EditCompetitionModal(props: Props) {
   const { mutateAsync: update, isPending } = useUpdateCompetition()
   const { mutateAsync: del, isPending: deleting } = useDeleteCompetition()
   const { data: fishKinds } = useFishKinds()
+  const { data: formats } = useCompetitionFormats()
   const { data: currentFishKinds } = useCompetitionFishKinds(props.id)
   const [fishKindIds, setFishKindIds] = useState<string[]>(currentFishKinds ?? [])
+  const [formatId, setFormatId] = useState<string | null>(props.format_id ?? null)
   const { mutateAsync: setFishKinds } = useSetCompetitionFishKinds()
 
   async function handleSave() {
     if (!title.trim() || !startsAt) return
-    await update({ id: props.id, input: { title: title.trim(), description: description || undefined, starts_at: startsAt } })
+    await update({ id: props.id, input: { title: title.trim(), description: description || undefined, starts_at: startsAt, format_id: formatId ?? null } })
     await setFishKinds({ competitionId: props.id, fishKindIds })
     props.onClose()
   }
@@ -47,6 +51,15 @@ export function EditCompetitionModal(props: Props) {
         onChange={setStartsAt}
         required
         popoverProps={{ zIndex: 10001, withinPortal: true }}
+      />
+      <Select
+        label="Формат соревнования"
+        placeholder="Выберите формат"
+        data={(formats ?? []).map((f) => ({ value: f.id, label: f.name }))}
+        value={formatId}
+        onChange={setFormatId}
+        searchable
+        nothingFoundMessage="Нет данных"
       />
       <Textarea label="Описание" value={description} onChange={(e) => setDescription(e.currentTarget.value)} minRows={3} />
       <MultiSelect

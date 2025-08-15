@@ -1,5 +1,5 @@
-import { Badge, Button, Container, Group, Paper, Stack, Text, Drawer } from '@mantine/core'
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet'
+import { Button, Container, Group, Paper, Stack, Text, Drawer, Title, Tabs } from '@mantine/core'
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import L, { type LatLngExpression } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useState } from 'react'
@@ -7,8 +7,12 @@ import { modals } from '@mantine/modals'
 import { CreateCompetitionModal } from '../features/competitions/CreateCompetitionModal'
 import { EditCompetitionModal } from '../features/competitions/EditCompetitionModal'
 import { useCompetitions, useDeleteCompetition } from '../features/competitions/hooks'
+import { useCompetitionFormats } from '../features/dicts/formats/hooks'
+import { useAuth } from '../features/auth/hooks'
 import { notifications } from '@mantine/notifications'
 import { useDisclosure } from '@mantine/hooks'
+import { type Competition } from '../features/competitions/types'
+import { TeamsTab } from '../features/teams/TeamsTab'
 
 // Fix default marker icons path in Vite
 import iconUrl from 'leaflet/dist/images/marker-icon.png'
@@ -37,25 +41,34 @@ function MapClickHandler({ onClick }: { onClick: (latlng: L.LatLng) => void }) {
 
 export default function MapPage() {
   const { data: competitions } = useCompetitions()
+  const { data: formats } = useCompetitionFormats()
   const { mutateAsync: deleteCompetition } = useDeleteCompetition()
+  const { user } = useAuth()
   const [tempMarker, setTempMarker] = useState<L.LatLng | null>(null)
-  const [createOpened, { open: openCreate, close: closeCreate }] = useDisclosure(false)
+  const [drawerOpened, { open: openDrawer, close: closeDrawer }] = useDisclosure(false)
+  const [editingCompetition, setEditingCompetition] = useState<Competition | null>(null)
+  const [editDrawerOpened, { open: openEditDrawer, close: closeEditDrawer }] = useDisclosure(false)
+  const [viewingCompetition, setViewingCompetition] = useState<Competition | null>(null)
+  const [viewDrawerOpened, { open: openViewDrawer, close: closeViewDrawer }] = useDisclosure(false)
 
-  function openEditModal(c: any) {
-    modals.open({
-      title: 'Редактировать соревнование',
-      children: (
-        <EditCompetitionModal
-          id={c.id}
-          title={c.title}
-          description={c.description}
-          starts_at={c.starts_at}
-          lat={c.lat}
-          lng={c.lng}
-          onClose={() => modals.closeAll()}
-        />
-      ),
-    })
+  const openEditModal = (competition: Competition) => {
+    setEditingCompetition(competition)
+    openEditDrawer()
+  }
+
+  const openViewModal = (competition: Competition) => {
+    setViewingCompetition(competition)
+    openViewDrawer()
+  }
+
+  const handleCloseEditDrawer = () => {
+    closeEditDrawer()
+    setEditingCompetition(null)
+  }
+
+  const handleCloseViewDrawer = () => {
+    closeViewDrawer()
+    setViewingCompetition(null)
   }
 
   function openDeleteConfirm(c: any) {
@@ -85,40 +98,23 @@ export default function MapPage() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           {competitions?.map((c) => (
-            <Marker key={c.id} position={[c.lat, c.lng]}>
-              <Popup>
-                <Stack gap={6} style={{ minWidth: 240 }}>
-                  <Text fw={600}>{c.title}</Text>
-                  <Badge variant="light" w="fit-content">
-                    {new Date(c.starts_at).toLocaleString()}
-                  </Badge>
-                  {/* Для отображения названий можно сделать join или отдельный запрос по связям */}
-                  {c.description && (
-                    <Text size="sm" c="dimmed" lineClamp={3}>
-                      {c.description}
-                    </Text>
-                  )}
-                  <Group gap="xs" mt="xs">
-                    <Button size="xs" variant="light" onClick={() => openEditModal(c)}>
-                      Редактировать
-                    </Button>
-                    <Button size="xs" color="red" variant="light" onClick={() => openDeleteConfirm(c)}>
-                      Удалить
-                    </Button>
-                  </Group>
-                </Stack>
-              </Popup>
-            </Marker>
+            <Marker 
+              key={c.id} 
+              position={[c.lat, c.lng]}
+              eventHandlers={{
+                click: () => openViewModal(c)
+              }}
+            />
           ))}
           {tempMarker && (
             <Marker position={tempMarker as unknown as LatLngExpression} />
           )}
-          <MapClickHandler onClick={(latlng) => { setTempMarker(latlng); openCreate() }} />
+          <MapClickHandler onClick={(latlng) => { setTempMarker(latlng); openDrawer() }} />
         </MapContainer>
       </Paper>
       <Drawer
-        opened={createOpened}
-        onClose={() => { closeCreate(); setTempMarker(null) }}
+        opened={drawerOpened}
+        onClose={() => { closeDrawer(); setTempMarker(null) }}
         position="right"
         size={420}
         title="Новое соревнование"
@@ -128,10 +124,90 @@ export default function MapPage() {
           <CreateCompetitionModal
             lat={tempMarker.lat}
             lng={tempMarker.lng}
-            onClose={() => { closeCreate(); setTempMarker(null) }}
+            onClose={() => { closeDrawer(); setTempMarker(null) }}
           />
         )}
       </Drawer>
+      <Drawer
+        opened={editDrawerOpened}
+        onClose={handleCloseEditDrawer}
+        title="Редактировать соревнование"
+        position="right"
+        size={420}
+        padding="md"
+        withinPortal
+      >
+        {editingCompetition && (
+          <EditCompetitionModal
+            id={editingCompetition.id}
+            title={editingCompetition.title}
+            description={editingCompetition.description || ''}
+            starts_at={editingCompetition.starts_at}
+            lat={editingCompetition.lat}
+            lng={editingCompetition.lng}
+            format_id={editingCompetition.format_id}
+            onClose={handleCloseEditDrawer}
+          />
+        )}
+      </Drawer>
+      <Drawer
+            opened={viewDrawerOpened}
+            onClose={handleCloseViewDrawer}
+            title="Информация о соревновании"
+            position="right"
+            size={420}
+            padding="md"
+            withinPortal
+          >
+            {viewingCompetition && (
+              <Tabs defaultValue="info">
+                <Tabs.List>
+                  <Tabs.Tab value="info">Информация</Tabs.Tab>
+                  <Tabs.Tab value="teams">Команды</Tabs.Tab>
+                </Tabs.List>
+
+                <Tabs.Panel value="info" pt="md">
+                  <Stack gap="md">
+                    <Title order={3}>{viewingCompetition.title}</Title>
+                    <Text size="sm">
+                      <strong>Дата:</strong> {new Date(viewingCompetition.starts_at).toLocaleString('ru-RU')}
+                    </Text>
+                    {viewingCompetition.description && (
+                      <Text size="sm">
+                        <strong>Описание:</strong> {viewingCompetition.description}
+                      </Text>
+                    )}
+                    {viewingCompetition.format_id && (
+                      <Text size="sm">
+                        <strong>Формат:</strong> {formats?.find(f => f.id === viewingCompetition.format_id)?.name || viewingCompetition.format_id}
+                      </Text>
+                    )}
+                    <Text size="sm">
+                      <strong>Координаты:</strong> {viewingCompetition.lat.toFixed(6)}, {viewingCompetition.lng.toFixed(6)}
+                    </Text>
+                    <Group gap="xs" mt="md">
+                      <Button size="sm" variant="light" onClick={() => {
+                        handleCloseViewDrawer()
+                        openEditModal(viewingCompetition)
+                      }}>
+                        Редактировать
+                      </Button>
+                      <Button size="sm" variant="light" color="red" onClick={() => {
+                        handleCloseViewDrawer()
+                        openDeleteConfirm(viewingCompetition)
+                      }}>
+                        Удалить
+                      </Button>
+                    </Group>
+                  </Stack>
+                </Tabs.Panel>
+
+                <Tabs.Panel value="teams" pt="md">
+                  <TeamsTab competitionId={viewingCompetition.id} userId={user?.id} />
+                </Tabs.Panel>
+              </Tabs>
+            )}
+          </Drawer>
     </Container>
   )
 }

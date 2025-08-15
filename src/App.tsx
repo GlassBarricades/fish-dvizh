@@ -28,11 +28,22 @@ function App() {
           <Group justify="space-between" style={{ flex: 1 }}>
             <Text size="lg" fw={700}>FishDvizh</Text>
             <Group ml="xl" gap={8} visibleFrom="sm">
-              <UnstyledButton className={classes.control} component={Link} to="/">Home</UnstyledButton>
-              <UnstyledButton className={classes.control} component={Link} to="/map">Map</UnstyledButton>
-              {user && (user as any)?.user_metadata?.role === 'admin' && (
-                <UnstyledButton className={classes.control} component={Link} to="/admin">Admin</UnstyledButton>
-              )}
+              <Group gap="xs">
+                <Link to="/" className={classes.root}>
+                  Home
+                </Link>
+                <Link to="/map" className={classes.root}>
+                  Map
+                </Link>
+                <Link to="/profile" className={classes.root}>
+                  Profile
+                </Link>
+                {user?.user_metadata?.role === 'admin' && (
+                  <Link to="/admin" className={classes.root}>
+                    Admin
+                  </Link>
+                )}
+              </Group>
               {user ? (
                 <>
                   <Badge variant="light" color="gray" mr="sm">
