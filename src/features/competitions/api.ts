@@ -12,6 +12,16 @@ export async function fetchCompetitions(): Promise<Competition[]> {
   return data as Competition[]
 }
 
+export async function fetchCompetitionById(id: string): Promise<Competition> {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (error) throw error
+  return data as Competition
+}
+
 export async function createCompetition(input: CreateCompetitionInput): Promise<Competition> {
   const { data, error } = await supabase
     .from(TABLE)

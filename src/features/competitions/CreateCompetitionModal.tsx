@@ -5,6 +5,7 @@ import dayjs from 'dayjs'
 import { useCreateCompetition, useSetCompetitionFishKinds } from './hooks'
 import { useFishKinds } from '../dicts/fish/hooks'
 import { useCompetitionFormats } from '../dicts/formats/hooks'
+import { useTeamSizes } from '../dicts/teamSizes/hooks'
 import { notifications } from '@mantine/notifications'
 
 type Props = {
@@ -21,12 +22,14 @@ export function CreateCompetitionModal({ lat, lng, onClose }: Props) {
   const { mutateAsync: setFishKinds } = useSetCompetitionFishKinds()
   const { data: fishKinds } = useFishKinds()
   const { data: formats } = useCompetitionFormats()
+  const { data: teamSizes } = useTeamSizes()
   const [fishKindIds, setFishKindIds] = useState<string[]>([])
   const [formatId, setFormatId] = useState<string | null>(null)
+  const [teamSizeId, setTeamSizeId] = useState<string | null>(null)
 
   async function handleSubmit() {
-    if (!title.trim() || !startsAt || fishKindIds.length === 0 || !formatId) {
-      notifications.show({ color: 'red', message: 'Заполните название, дату/время, выберите виды рыбы и формат' })
+    if (!title.trim() || !startsAt || fishKindIds.length === 0 || !formatId || !teamSizeId) {
+      notifications.show({ color: 'red', message: 'Заполните название, дату/время, выберите виды рыбы, формат и размер команды' })
       return
     }
     try {
@@ -37,6 +40,7 @@ export function CreateCompetitionModal({ lat, lng, onClose }: Props) {
         lat,
         lng,
         format_id: formatId,
+        team_size_id: teamSizeId,
       })
       await setFishKinds({ competitionId: created.id, fishKindIds })
       notifications.show({ color: 'green', message: 'Соревнование создано' })
@@ -62,6 +66,16 @@ export function CreateCompetitionModal({ lat, lng, onClose }: Props) {
         data={(formats ?? []).map((f) => ({ value: f.id, label: f.name }))}
         value={formatId}
         onChange={setFormatId}
+        searchable
+        nothingFoundMessage="Нет данных"
+        required
+      />
+      <Select
+        label="Размер команды"
+        placeholder="Выберите размер команды"
+        data={(teamSizes ?? []).map((s) => ({ value: s.id, label: `${s.name} (${s.size})` }))}
+        value={teamSizeId}
+        onChange={setTeamSizeId}
         searchable
         nothingFoundMessage="Нет данных"
         required

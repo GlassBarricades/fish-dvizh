@@ -8,6 +8,7 @@ import { CreateCompetitionModal } from '../features/competitions/CreateCompetiti
 import { EditCompetitionModal } from '../features/competitions/EditCompetitionModal'
 import { useCompetitions, useDeleteCompetition } from '../features/competitions/hooks'
 import { useCompetitionFormats } from '../features/dicts/formats/hooks'
+import { useTeamSizes } from '../features/dicts/teamSizes/hooks'
 import { useAuth } from '../features/auth/hooks'
 import { notifications } from '@mantine/notifications'
 import { useDisclosure } from '@mantine/hooks'
@@ -44,6 +45,7 @@ export default function MapPage() {
   const { data: formats } = useCompetitionFormats()
   const { mutateAsync: deleteCompetition } = useDeleteCompetition()
   const { user } = useAuth()
+  const { data: teamSizes } = useTeamSizes()
   const [tempMarker, setTempMarker] = useState<L.LatLng | null>(null)
   const [drawerOpened, { open: openDrawer, close: closeDrawer }] = useDisclosure(false)
   const [editingCompetition, setEditingCompetition] = useState<Competition | null>(null)
@@ -146,6 +148,7 @@ export default function MapPage() {
             lat={editingCompetition.lat}
             lng={editingCompetition.lng}
             format_id={editingCompetition.format_id}
+            team_size_id={editingCompetition.team_size_id}
             onClose={handleCloseEditDrawer}
           />
         )}
@@ -163,7 +166,7 @@ export default function MapPage() {
               <Tabs defaultValue="info">
                 <Tabs.List>
                   <Tabs.Tab value="info">Информация</Tabs.Tab>
-                  <Tabs.Tab value="teams">Команды</Tabs.Tab>
+                  <Tabs.Tab value="teams">{(teamSizes?.find(s => s.id === viewingCompetition.team_size_id)?.size === 1) ? 'Участники' : 'Команды'}</Tabs.Tab>
                 </Tabs.List>
 
                 <Tabs.Panel value="info" pt="md">
@@ -180,6 +183,11 @@ export default function MapPage() {
                     {viewingCompetition.format_id && (
                       <Text size="sm">
                         <strong>Формат:</strong> {formats?.find(f => f.id === viewingCompetition.format_id)?.name || viewingCompetition.format_id}
+                      </Text>
+                    )}
+                    {viewingCompetition.team_size_id && (
+                      <Text size="sm">
+                        <strong>Размер команды:</strong> {teamSizes?.find(s => s.id === viewingCompetition.team_size_id)?.name || viewingCompetition.team_size_id}
                       </Text>
                     )}
                     <Text size="sm">

@@ -22,6 +22,10 @@ import {
   fetchCompetitionTeams,
   registerTeamForCompetition,
   updateTeamParticipationStatus,
+  fetchUserTeamRoles,
+  registerSoloForCompetition,
+  updateSoloParticipationStatus,
+  fetchSoloParticipants,
 } from './api'
 import type {
   CreateTeamInput,
@@ -196,8 +200,8 @@ export function useRegisterTeamForCompetition() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (input: CreateTeamParticipationInput) => registerTeamForCompetition(input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['competition-teams'] })
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ['competition-teams', variables.competition_id] })
     },
   })
 }
@@ -213,5 +217,54 @@ export function useUpdateTeamParticipationStatus() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['competition-teams'] })
     },
+  })
+}
+
+export function useRegisterSoloForCompetition() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: { user_id: string; competition_id: string }) => registerSoloForCompetition(input),
+    onSuccess: (created, variables) => {
+      qc.invalidateQueries({ queryKey: ['competition-teams', variables.competition_id] })
+      qc.invalidateQueries({ queryKey: ['solo-participants', variables.competition_id] })
+      // Optimistic append
+      const key = ['solo-participants', variables.competition_id]
+      const existing = qc.getQueryData<any[]>(key) || []
+      const exists = existing.some((p) => p.user_id === variables.user_id)
+      if (!exists) {
+        qc.setQueryData(key, [
+          ...existing,
+          { user_id: variables.user_id, status: created.status, registered_at: created.registered_at },
+        ])
+      }
+    },
+  })
+}
+
+export function useUpdateSoloParticipationStatus() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: { user_id: string; competition_id: string; status: 'registered' | 'confirmed' | 'rejected' }) => 
+      updateSoloParticipationStatus(input.user_id, input.competition_id, { status: input.status }),
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ['competition-teams', variables.competition_id] })
+      qc.invalidateQueries({ queryKey: ['solo-participants', variables.competition_id] })
+    },
+  })
+}
+
+export function useSoloParticipants(competitionId: string) {
+  return useQuery({
+    queryKey: ['solo-participants', competitionId],
+    queryFn: () => fetchSoloParticipants(competitionId),
+    enabled: !!competitionId,
+  })
+}
+
+export function useUserTeamRoles(userId: string | undefined, teamIds: string[] | undefined) {
+  return useQuery({
+    queryKey: ['user-team-roles', userId, teamIds?.join(',') ?? ''],
+    queryFn: () => fetchUserTeamRoles(userId as string, teamIds as string[]),
+    enabled: !!userId && !!teamIds && teamIds.length > 0,
   })
 }

@@ -72,8 +72,37 @@ export type TeamParticipation = {
 export type CreateTeamParticipationInput = {
   team_id: string
   competition_id: string
+  participant_user_ids?: string[]
 }
 
 export type UpdateTeamParticipationInput = {
   status?: 'registered' | 'confirmed' | 'rejected'
+  participant_user_ids?: string[]
+}
+
+// Solo participation (for competitions with team size = 1)
+export type SoloParticipation = {
+  id: string
+  user_id: string
+  competition_id: string
+  status: 'registered' | 'confirmed' | 'rejected'
+  registered_at: string
+  confirmed_at?: string | null
+}
+
+export type CreateSoloParticipationInput = {
+  user_id: string
+  competition_id: string
+}
+
+export type UpdateSoloParticipationInput = {
+  status?: 'registered' | 'confirmed' | 'rejected'
+}
+
+export type SoloParticipant = {
+  user_id: string
+  status: 'registered' | 'confirmed' | 'rejected'
+  registered_at: string
+  user_email?: string
+  user_nickname?: string
 }

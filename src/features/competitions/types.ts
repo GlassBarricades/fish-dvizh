@@ -6,6 +6,7 @@ export type Competition = {
   lat: number
   lng: number
   format_id?: string | null
+  team_size_id?: string | null
   created_at: string
   created_by?: string | null
 }
@@ -17,6 +18,7 @@ export type CreateCompetitionInput = {
   lat: number
   lng: number
   format_id: string
+  team_size_id?: string | null
 }
 
 export type UpdateCompetitionInput = {
@@ -26,6 +28,7 @@ export type UpdateCompetitionInput = {
   lat?: number
   lng?: number
   format_id?: string | null
+  team_size_id?: string | null
 }
 
 export type CompetitionFishKind = {

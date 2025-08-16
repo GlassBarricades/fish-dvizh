@@ -10,7 +10,11 @@ import type {
   TeamParticipation,
   CreateTeamParticipationInput,
   UpdateTeamParticipationInput,
-  TeamRole
+  TeamRole,
+  SoloParticipation,
+  CreateSoloParticipationInput,
+  UpdateSoloParticipationInput,
+  SoloParticipant
 } from './types'
 
 const TEAMS_TABLE = 'teams'
@@ -287,7 +291,7 @@ export async function fetchCompetitionTeams(competitionId: string): Promise<Team
       teams!inner(*)
     `)
     .eq('competition_id', competitionId)
-    .eq('status', 'confirmed')
+    .in('status', ['confirmed', 'registered'])
     .order('registered_at', { ascending: true })
   if (error) throw error
   
@@ -298,11 +302,12 @@ export async function fetchCompetitionTeams(competitionId: string): Promise<Team
 export async function registerTeamForCompetition(input: CreateTeamParticipationInput): Promise<TeamParticipation> {
   const { data, error } = await supabase
     .from('team_participations')
-    .insert({
+    .upsert({
       ...input,
       status: 'registered',
-      registered_at: new Date().toISOString()
-    })
+      registered_at: new Date().toISOString(),
+      confirmed_at: null
+    }, { onConflict: 'team_id,competition_id' })
     .select('*')
     .single()
   if (error) throw error
@@ -326,4 +331,93 @@ export async function updateTeamParticipationStatus(
     .single()
   if (error) throw error
   return data as TeamParticipation
+}
+
+// User roles in specific teams
+export async function fetchUserTeamRoles(
+  userId: string,
+  teamIds: string[]
+): Promise<Record<string, TeamRole>> {
+  if (!teamIds || teamIds.length === 0) return {}
+  const { data, error } = await supabase
+    .from('team_members')
+    .select('team_id, role')
+    .eq('user_id', userId)
+    .in('team_id', teamIds)
+  if (error) throw error
+  const rolesMap: Record<string, TeamRole> = {}
+  ;(data || []).forEach((row: any) => {
+    rolesMap[row.team_id] = row.role as TeamRole
+  })
+  return rolesMap
+}
+
+// Solo participation API
+export async function registerSoloForCompetition(input: CreateSoloParticipationInput): Promise<SoloParticipation> {
+  const { data, error } = await supabase
+    .from('solo_participations')
+    .upsert({
+      ...input,
+      status: 'registered',
+      registered_at: new Date().toISOString(),
+      confirmed_at: null
+    }, { onConflict: 'user_id,competition_id' })
+    .select('*')
+    .single()
+  if (error) throw error
+  return data as SoloParticipation
+}
+
+export async function updateSoloParticipationStatus(
+  userId: string,
+  competitionId: string,
+  input: UpdateSoloParticipationInput
+): Promise<SoloParticipation> {
+  const { data, error } = await supabase
+    .from('solo_participations')
+    .update({
+      ...input,
+      ...(input.status === 'confirmed' && { confirmed_at: new Date().toISOString() })
+    })
+    .eq('user_id', userId)
+    .eq('competition_id', competitionId)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data as SoloParticipation
+}
+
+export async function fetchSoloParticipants(competitionId: string): Promise<SoloParticipant[]> {
+  const { data, error } = await supabase
+    .from('solo_participations')
+    .select('user_id,status,registered_at')
+    .eq('competition_id', competitionId)
+    .in('status', ['confirmed','registered'])
+    .order('registered_at', { ascending: true })
+  if (error) throw error
+
+  const rows = (data as { user_id: string; status: string; registered_at: string }[]) || []
+  if (rows.length === 0) return []
+
+  const userIds = Array.from(new Set(rows.map(r => r.user_id)))
+  const { data: usersData, error: usersError } = await supabase
+    .from('users')
+    .select('id,email,raw_user_meta_data')
+    .in('id', userIds)
+  if (usersError) {
+    // Если нет доступа к users, вернем без дополнительной информации
+    return rows.map(r => ({ user_id: r.user_id, status: r.status as any, registered_at: r.registered_at }))
+  }
+  const byId: Record<string, { email?: string; nickname?: string }> = {}
+  const usersArr = (usersData ?? []) as any[]
+  usersArr.forEach((u: any) => {
+    byId[u.id] = { email: u.email, nickname: u.raw_user_meta_data?.nickname }
+  })
+  return rows.map(r => ({
+    user_id: r.user_id,
+    status: r.status as any,
+    registered_at: r.registered_at,
+    user_email: byId[r.user_id]?.email,
+    user_nickname: byId[r.user_id]?.nickname,
+  }))
 }

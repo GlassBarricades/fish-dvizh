@@ -1,11 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createCompetition, fetchCompetitions, updateCompetition, deleteCompetition, setCompetitionFishKinds, listCompetitionFishKinds } from './api'
+import { createCompetition, fetchCompetitions, updateCompetition, deleteCompetition, setCompetitionFishKinds, listCompetitionFishKinds, fetchCompetitionById } from './api'
 import type { CreateCompetitionInput, UpdateCompetitionInput } from './types'
 
 const QUERY_KEY = ['competitions']
 
 export function useCompetitions() {
   return useQuery({ queryKey: QUERY_KEY, queryFn: fetchCompetitions })
+}
+
+export function useCompetition(competitionId: string) {
+  return useQuery({ queryKey: ['competition', competitionId], queryFn: () => fetchCompetitionById(competitionId), enabled: !!competitionId })
 }
 
 export function useCreateCompetition() {

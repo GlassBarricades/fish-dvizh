@@ -25,6 +25,7 @@ export default function AdminPage() {
               <NavLink component={Link} to="/admin/dicts" label="Справочники">
                 <NavLink component={Link} to="/admin/dicts/fish" label="Виды рыбы" active={active('/admin/dicts/fish')} />
                 <NavLink component={Link} to="/admin/dicts/formats" label="Форматы соревнований" active={active('/admin/dicts/formats')} />
+                <NavLink component={Link} to="/admin/dicts/team-sizes" label="Размеры команд" active={active('/admin/dicts/team-sizes')} />
               </NavLink>
             </Stack>
           </Paper>
@@ -41,6 +42,7 @@ export default function AdminPage() {
           <NavLink component={Link} to="/admin/dicts" label="Справочники">
             <NavLink component={Link} to="/admin/dicts/fish" label="Виды рыбы" active={active('/admin/dicts/fish')} onClick={closeMobile} />
             <NavLink component={Link} to="/admin/dicts/formats" label="Форматы соревнований" active={active('/admin/dicts/formats')} onClick={closeMobile} />
+            <NavLink component={Link} to="/admin/dicts/team-sizes" label="Размеры команд" active={active('/admin/dicts/team-sizes')} onClick={closeMobile} />
           </NavLink>
         </Stack>
       </Drawer>

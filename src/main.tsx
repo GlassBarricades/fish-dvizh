@@ -31,6 +31,7 @@ const AdminUsersPage = lazy(() => import('./pages/admin/UsersPage'))
 const AdminDictsPage = lazy(() => import('./pages/admin/DictsPage'))
 const FishKindsPage = lazy(() => import('./pages/admin/FishKindsPage'))
 const CompetitionFormatsPage = lazy(() => import('./pages/admin/CompetitionFormatsPage'))
+const TeamSizesPage = lazy(() => import('./pages/admin/TeamSizesPage'))
 const router = createBrowserRouter([
   {
     path: '/',
@@ -53,6 +54,7 @@ const router = createBrowserRouter([
           { path: 'dicts', element: <Suspense fallback={null}><AdminDictsPage /></Suspense> },
           { path: 'dicts/fish', element: <Suspense fallback={null}><FishKindsPage /></Suspense> },
           { path: 'dicts/formats', element: <Suspense fallback={null}><CompetitionFormatsPage /></Suspense> },
+          { path: 'dicts/team-sizes', element: <Suspense fallback={null}><TeamSizesPage /></Suspense> },
         ],
       },
     ],
