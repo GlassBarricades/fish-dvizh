@@ -93,13 +93,17 @@ export function TeamsTab({ competitionId, userId }: Props) {
 
   const isSolo = teamSizeLimit === 1
   const isUserSoloRegistered = !!(isSolo && userId && soloParticipants?.some(p => p.user_id === userId && (p.status === 'registered' || p.status === 'confirmed')))
+  const capacity = competition?.max_slots ?? null
+  const currentSoloCount = (soloParticipants ?? []).filter(p => p.status === 'registered' || p.status === 'confirmed').length
+  const currentTeamCount = (competitionTeams ?? []).length
+  const isFull = capacity != null ? (isSolo ? currentSoloCount >= capacity : currentTeamCount >= capacity) : false
 
   return (
     <Stack gap="md">
       <Group justify="space-between">
         <Title order={4}>{isSolo ? 'Участники соревнования' : 'Команды соревнования'}</Title>
         <Group gap="xs">
-          {isSolo && !isUserSoloRegistered && (
+          {isSolo && !isUserSoloRegistered && !isFull && (
             <Button 
               leftSection={<IconTrophy size={16} />} 
               variant="light"
@@ -135,7 +139,7 @@ export function TeamsTab({ competitionId, userId }: Props) {
               Снять себя с регистрации
             </Button>
           )}
-          {teamSizeLimit !== 1 && (
+          {teamSizeLimit !== 1 && !isFull && (
             <Button 
               leftSection={<IconTrophy size={16} />} 
               variant="light"
@@ -173,6 +177,9 @@ export function TeamsTab({ competitionId, userId }: Props) {
             ))
           ) : (
             <Text c="dimmed" ta="center" py="xl">Пока нет участников. Зарегистрируйтесь первым!</Text>
+          )}
+          {capacity != null && (
+            <Text size="sm" c="dimmed" ta="center">{`Зарегистрировано: ${currentSoloCount}${capacity != null ? ` / ${capacity}` : ''}`}</Text>
           )}
         </Stack>
       )}
@@ -235,6 +242,9 @@ export function TeamsTab({ competitionId, userId }: Props) {
             Пока нет команд в соревновании. Зарегистрируйте свою команду!
           </Text>
         ))
+      )}
+      {teamSizeLimit !== 1 && capacity != null && (
+        <Text size="sm" c="dimmed" ta="center">{`Зарегистрировано команд: ${currentTeamCount}${capacity != null ? ` / ${capacity}` : ''}`}</Text>
       )}
 
       {/* Register Team Modal */}

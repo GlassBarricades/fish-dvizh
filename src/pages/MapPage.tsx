@@ -14,6 +14,10 @@ import { notifications } from '@mantine/notifications'
 import { useDisclosure } from '@mantine/hooks'
 import { type Competition } from '../features/competitions/types'
 import { TeamsTab } from '../features/teams/TeamsTab'
+import { useCompetitionFishKinds } from '../features/competitions/hooks'
+import { useFishKinds } from '../features/dicts/fish/hooks'
+import { ScheduleTab } from '../features/schedule/ScheduleTab'
+import { Link } from 'react-router-dom'
 
 // Fix default marker icons path in Vite
 import iconUrl from 'leaflet/dist/images/marker-icon.png'
@@ -149,6 +153,7 @@ export default function MapPage() {
             lng={editingCompetition.lng}
             format_id={editingCompetition.format_id}
             team_size_id={editingCompetition.team_size_id}
+            max_slots={editingCompetition.max_slots}
             onClose={handleCloseEditDrawer}
           />
         )}
@@ -167,6 +172,7 @@ export default function MapPage() {
                 <Tabs.List>
                   <Tabs.Tab value="info">Информация</Tabs.Tab>
                   <Tabs.Tab value="teams">{(teamSizes?.find(s => s.id === viewingCompetition.team_size_id)?.size === 1) ? 'Участники' : 'Команды'}</Tabs.Tab>
+                  <Tabs.Tab value="schedule">Расписание</Tabs.Tab>
                 </Tabs.List>
 
                 <Tabs.Panel value="info" pt="md">
@@ -190,10 +196,15 @@ export default function MapPage() {
                         <strong>Размер команды:</strong> {teamSizes?.find(s => s.id === viewingCompetition.team_size_id)?.name || viewingCompetition.team_size_id}
                       </Text>
                     )}
+                    {/* Целевые виды рыбы */}
+                    <CompetitionFishKindsInfo competitionId={viewingCompetition.id} />
                     <Text size="sm">
                       <strong>Координаты:</strong> {viewingCompetition.lat.toFixed(6)}, {viewingCompetition.lng.toFixed(6)}
                     </Text>
                     <Group gap="xs" mt="md">
+                      <Button size="sm" variant="filled" component={Link} to={`/competition/${viewingCompetition.id}`}>
+                        Открыть страницу соревнования
+                      </Button>
                       <Button size="sm" variant="light" onClick={() => {
                         handleCloseViewDrawer()
                         openEditModal(viewingCompetition)
@@ -213,10 +224,28 @@ export default function MapPage() {
                 <Tabs.Panel value="teams" pt="md">
                   <TeamsTab competitionId={viewingCompetition.id} userId={user?.id} />
                 </Tabs.Panel>
+                <Tabs.Panel value="schedule" pt="md">
+                  <ScheduleTab competitionId={viewingCompetition.id} />
+                </Tabs.Panel>
               </Tabs>
             )}
           </Drawer>
     </Container>
+  )
+}
+
+function CompetitionFishKindsInfo({ competitionId }: { competitionId: string }) {
+  const { data: fishKindIds } = useCompetitionFishKinds(competitionId)
+  const { data: fishKinds } = useFishKinds()
+  if (!fishKindIds || fishKindIds.length === 0) return null
+  const names = fishKindIds
+    .map((id) => fishKinds?.find((f) => f.id === id)?.name || '')
+    .filter((n) => n)
+  if (names.length === 0) return null
+  return (
+    <Text size="sm">
+      <strong>Целевая рыба:</strong> {names.join(', ')}
+    </Text>
   )
 }
 

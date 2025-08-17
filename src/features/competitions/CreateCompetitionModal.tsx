@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Group, MultiSelect, Stack, TextInput, Textarea, Select } from '@mantine/core'
+import { Button, Group, MultiSelect, Stack, TextInput, Textarea, Select, NumberInput } from '@mantine/core'
 import { DateTimePicker } from '@mantine/dates'
 import dayjs from 'dayjs'
 import { useCreateCompetition, useSetCompetitionFishKinds } from './hooks'
@@ -26,6 +26,7 @@ export function CreateCompetitionModal({ lat, lng, onClose }: Props) {
   const [fishKindIds, setFishKindIds] = useState<string[]>([])
   const [formatId, setFormatId] = useState<string | null>(null)
   const [teamSizeId, setTeamSizeId] = useState<string | null>(null)
+  const [maxSlots, setMaxSlots] = useState<number | ''>('')
 
   async function handleSubmit() {
     if (!title.trim() || !startsAt || fishKindIds.length === 0 || !formatId || !teamSizeId) {
@@ -41,6 +42,7 @@ export function CreateCompetitionModal({ lat, lng, onClose }: Props) {
         lng,
         format_id: formatId,
         team_size_id: teamSizeId,
+        max_slots: maxSlots === '' ? null : Number(maxSlots),
       })
       await setFishKinds({ competitionId: created.id, fishKindIds })
       notifications.show({ color: 'green', message: 'Соревнование создано' })
@@ -81,6 +83,14 @@ export function CreateCompetitionModal({ lat, lng, onClose }: Props) {
         required
       />
       <Textarea label="Описание" value={description} onChange={(e) => setDescription(e.currentTarget.value)} minRows={3} />
+      <NumberInput
+        label={teamSizes?.find((s) => s.id === teamSizeId)?.size === 1 ? 'Лимит участников (соло)' : 'Лимит команд'}
+        placeholder="Без лимита"
+        value={maxSlots}
+        onChange={setMaxSlots}
+        min={1}
+        clampBehavior="strict"
+      />
       <MultiSelect
         label="Целевая рыба"
         placeholder="Выберите виды"

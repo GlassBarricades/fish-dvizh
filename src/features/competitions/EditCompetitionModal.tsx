@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Button, Group, MultiSelect, Stack, TextInput, Textarea, Select } from '@mantine/core'
+import { useEffect, useState } from 'react'
+import { Button, Group, MultiSelect, Stack, TextInput, Textarea, Select, NumberInput } from '@mantine/core'
 import { DateTimePicker } from '@mantine/dates'
 import { useDeleteCompetition, useSetCompetitionFishKinds, useUpdateCompetition, useCompetitionFishKinds } from './hooks'
 import { useFishKinds } from '../dicts/fish/hooks'
@@ -16,6 +16,7 @@ type Props = {
   fish_kind_id?: string | null
   format_id?: string | null
   team_size_id?: string | null
+  max_slots?: number | null
   onClose: () => void
 }
 
@@ -29,14 +30,21 @@ export function EditCompetitionModal(props: Props) {
   const { data: formats } = useCompetitionFormats()
   const { data: teamSizes } = useTeamSizes()
   const { data: currentFishKinds } = useCompetitionFishKinds(props.id)
-  const [fishKindIds, setFishKindIds] = useState<string[]>(currentFishKinds ?? [])
+  const [fishKindIds, setFishKindIds] = useState<string[]>([])
   const [formatId, setFormatId] = useState<string | null>(props.format_id ?? null)
   const [teamSizeId, setTeamSizeId] = useState<string | null>(props.team_size_id ?? null)
+  const [maxSlots, setMaxSlots] = useState<number | ''>(props.max_slots ?? '')
   const { mutateAsync: setFishKinds } = useSetCompetitionFishKinds()
+
+  useEffect(() => {
+    if (currentFishKinds) {
+      setFishKindIds(currentFishKinds)
+    }
+  }, [currentFishKinds])
 
   async function handleSave() {
     if (!title.trim() || !startsAt) return
-    await update({ id: props.id, input: { title: title.trim(), description: description || undefined, starts_at: startsAt, format_id: formatId ?? null, team_size_id: teamSizeId ?? null } })
+    await update({ id: props.id, input: { title: title.trim(), description: description || undefined, starts_at: startsAt, format_id: formatId ?? null, team_size_id: teamSizeId ?? null, max_slots: maxSlots === '' ? null : Number(maxSlots) } })
     await setFishKinds({ competitionId: props.id, fishKindIds })
     props.onClose()
   }
@@ -75,6 +83,14 @@ export function EditCompetitionModal(props: Props) {
         nothingFoundMessage="Нет данных"
       />
       <Textarea label="Описание" value={description} onChange={(e) => setDescription(e.currentTarget.value)} minRows={3} />
+      <NumberInput
+        label={teamSizes?.find((s) => s.id === teamSizeId)?.size === 1 ? 'Лимит участников (соло)' : 'Лимит команд'}
+        placeholder="Без лимита"
+        value={maxSlots}
+        onChange={setMaxSlots}
+        min={1}
+        clampBehavior="strict"
+      />
       <MultiSelect
         label="Целевая рыба"
         placeholder="Выберите виды"

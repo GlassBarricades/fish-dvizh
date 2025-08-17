@@ -7,6 +7,7 @@ export type Competition = {
   lng: number
   format_id?: string | null
   team_size_id?: string | null
+  max_slots?: number | null
   created_at: string
   created_by?: string | null
 }
@@ -19,6 +20,7 @@ export type CreateCompetitionInput = {
   lng: number
   format_id: string
   team_size_id?: string | null
+  max_slots?: number | null
 }
 
 export type UpdateCompetitionInput = {
@@ -29,6 +31,7 @@ export type UpdateCompetitionInput = {
   lng?: number
   format_id?: string | null
   team_size_id?: string | null
+  max_slots?: number | null
 }
 
 export type CompetitionFishKind = {

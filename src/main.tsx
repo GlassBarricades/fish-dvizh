@@ -26,6 +26,7 @@ const HomePage = lazy(() => import('./pages/HomePage'))
 const MapPage = lazy(() => import('./pages/MapPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const TeamPage = lazy(() => import('./pages/TeamPage'))
+const CompetitionPage = lazy(() => import('./pages/CompetitionPage'))
 const AdminPage = lazy(() => import('./pages/AdminPage'))
 const AdminUsersPage = lazy(() => import('./pages/admin/UsersPage'))
 const AdminDictsPage = lazy(() => import('./pages/admin/DictsPage'))
@@ -45,6 +46,7 @@ const router = createBrowserRouter([
       { path: 'map', element: <Suspense fallback={null}><MapPage /></Suspense> },
       { path: 'profile', element: <Suspense fallback={null}><ProfilePage /></Suspense> },
       { path: 'team/:teamId', element: <Suspense fallback={null}><TeamPage /></Suspense> },
+      { path: 'competition/:competitionId', element: <Suspense fallback={null}><CompetitionPage /></Suspense> },
       {
         path: 'admin',
         element: <AuthGate roles={["admin"]}><Suspense fallback={null}><AdminPage /></Suspense></AuthGate>,
