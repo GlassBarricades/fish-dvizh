@@ -68,7 +68,7 @@ export async function fetchUserJudgeInvitations(userId: string): Promise<JudgeIn
   const { data, error } = await supabase
     .from(INVITES)
     .select('id, competition_id, invited_user_id, invited_user_email, invited_by, status, created_at, competitions:competition_id(title)')
-    .or(`invited_user_id.eq.${userId},invited_user_email.eq.${''}`) // fallback by email not used when auth available
+    .eq('invited_user_id', userId)
     .order('created_at', { ascending: false })
   if (error) throw error
   return (data as any[]).map((r) => ({

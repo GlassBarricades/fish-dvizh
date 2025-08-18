@@ -1,15 +1,22 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Badge, Button, Group, Paper, Stack, Text, TextInput, NumberInput, SegmentedControl } from '@mantine/core'
 import { DateTimePicker } from '@mantine/dates'
 import dayjs from 'dayjs'
 import { useCreateRound, useDeleteRound, useRounds, useUpdateRound } from './hooks'
+import { useZones } from '../zones/hooks'
+import { useDrawAssignments, useRoundAssignments } from '../zones/assignments/hooks'
 import { notifications } from '@mantine/notifications'
+import { useQuery } from '@tanstack/react-query'
+import { supabase } from '../../lib/supabaseClient'
+import { useResultsInRange } from '../results/hooks'
 
 export function ScheduleTab({ competitionId }: { competitionId: string }) {
   const { data: rounds } = useRounds(competitionId)
   const { mutateAsync: createRound, isPending } = useCreateRound()
   const { mutateAsync: delRound } = useDeleteRound()
   const { mutateAsync: updRound } = useUpdateRound()
+  const { data: zones } = useZones(competitionId)
+  const draw = useDrawAssignments()
 
   const [title, setTitle] = useState('Тур')
   const [index, setIndex] = useState<number | ''>(rounds?.length ? rounds.length + 1 : 1)
@@ -99,12 +106,130 @@ export function ScheduleTab({ competitionId }: { competitionId: string }) {
                   notifications.show({ color: 'red', message: e?.message ?? 'Ошибка завершения тура' })
                 }
               }}>Завершить тур</Button>
+              <Button variant="light" loading={draw.isPending} disabled={!zones || zones.length === 0} onClick={() => draw.mutate({ competition_id: competitionId, round_id: r.id })}>Жеребьёвка по зонам</Button>
               <Button variant="light" color="red" onClick={() => delRound({ id: r.id, competitionId })}>Удалить</Button>
             </Group>
           </Group>
+
+          <RoundAssignmentsView roundId={r.id} competitionId={competitionId} />
+          {r.kind === 'round' && r.status === 'completed' && (
+            <RoundResultsTable roundId={r.id} competitionId={competitionId} startIso={r.started_at || r.start_at} endIso={r.ended_at || r.end_at} />
+          )}
         </Paper>
       ))}
     </Stack>
+  )
+}
+
+function RoundAssignmentsView({ roundId, competitionId }: { roundId: string; competitionId: string }) {
+  const { data } = useRoundAssignments(roundId)
+  const { data: zones } = useZones(competitionId)
+  const userIds = useMemo(() => Array.from(new Set((data ?? []).map((a) => a.participant_user_id))), [data])
+  const usersQuery = useQuery({
+    queryKey: ['round-assignment-users', roundId, userIds],
+    queryFn: async () => {
+      if (userIds.length === 0) return {}
+      const { data: users, error } = await supabase
+        .from('users')
+        .select('id,email,raw_user_meta_data')
+        .in('id', userIds)
+      if (error) throw error
+      return Object.fromEntries((users || []).map((u: any) => [u.id, { email: u.email, nickname: u.raw_user_meta_data?.nickname }])) as Record<string, { email?: string; nickname?: string }>
+    },
+    enabled: userIds.length > 0,
+  })
+  if (!data || data.length === 0) return null
+  return (
+    <Paper mt="sm" p="sm" withBorder>
+      <Stack gap={4}>
+        <Text size="sm" fw={600}>Назначения по зонам</Text>
+        {data.map((a) => {
+          const user = usersQuery.data?.[a.participant_user_id]
+          const userLabel = user?.nickname || user?.email || a.participant_user_id
+          const zoneLabel = zones?.find((z: any) => z.id === a.zone_id)?.name || a.zone_id
+          return (
+            <Text key={`${a.participant_user_id}-${a.zone_id}`} size="sm" c="dimmed">
+              Участник {userLabel} → зона {zoneLabel}
+            </Text>
+          )
+        })}
+      </Stack>
+    </Paper>
+  )
+}
+
+function RoundResultsTable({ roundId, competitionId, startIso, endIso }: { roundId: string; competitionId: string; startIso?: string | null; endIso?: string | null }) {
+  const { data: results } = useResultsInRange(competitionId, startIso, endIso)
+  const { data: assignments } = useRoundAssignments(roundId)
+  const { data: zones } = useZones(competitionId)
+
+  const byZone = useMemo(() => {
+    const map = new Map<string, { userId: string; totalWeight: number; totalCount: number }[]>()
+    const assignByUser = new Map<string, string>((assignments ?? []).map((a) => [a.participant_user_id, a.zone_id]))
+    const grouped: Record<string, { totalWeight: number; totalCount: number }> = {}
+    for (const r of results ?? []) {
+      const uid = r.participant_user_id
+      const zid = assignByUser.get(uid)
+      if (!zid) continue
+      const key = `${zid}::${uid}`
+      if (!grouped[key]) grouped[key] = { totalWeight: 0, totalCount: 0 }
+      grouped[key].totalWeight += r.weight_grams || 0
+      grouped[key].totalCount += 1
+    }
+    for (const key of Object.keys(grouped)) {
+      const [zid, uid] = key.split('::')
+      if (!map.has(zid)) map.set(zid, [])
+      map.get(zid)!.push({ userId: uid, totalWeight: grouped[key].totalWeight, totalCount: grouped[key].totalCount })
+    }
+    for (const [, arr] of map) arr.sort((a, b) => b.totalWeight - a.totalWeight)
+    return map
+  }, [results, assignments])
+
+  const { data: usersMap } = useQuery({
+    queryKey: ['round-results-users', roundId],
+    queryFn: async () => {
+      const ids = Array.from(new Set((results ?? []).map((r) => r.participant_user_id)))
+      if (ids.length === 0) return {}
+      const { data: users, error } = await supabase.from('users').select('id,email,raw_user_meta_data').in('id', ids)
+      if (error) throw error
+      return Object.fromEntries((users || []).map((u: any) => [u.id, { email: u.email, nickname: u.raw_user_meta_data?.nickname }])) as Record<string, { email?: string; nickname?: string }>
+    },
+    enabled: (results ?? []).length > 0,
+  })
+
+  if (!results || results.length === 0) return null
+
+  return (
+    <Paper mt="sm" p="sm" withBorder>
+      <Stack>
+        <Text fw={600}>Итоги по зонам</Text>
+        {Array.from(byZone.keys()).map((zid) => (
+          <Paper key={zid} p="sm" withBorder>
+            <Text fw={600} size="sm" mb={4}>Зона: {zones?.find((z: any) => z.id === zid)?.name || zid}</Text>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left' }}>Место</th>
+                  <th style={{ textAlign: 'left' }}>Участник</th>
+                  <th style={{ textAlign: 'left' }}>Вес (сумма, г)</th>
+                  <th style={{ textAlign: 'left' }}>Кол-во рыбин</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(byZone.get(zid) || []).map((row, idx) => (
+                  <tr key={row.userId}>
+                    <td>{idx + 1}</td>
+                    <td>{usersMap?.[row.userId]?.nickname || usersMap?.[row.userId]?.email || row.userId}</td>
+                    <td>{Math.round(row.totalWeight)}</td>
+                    <td>{row.totalCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Paper>
+        ))}
+      </Stack>
+    </Paper>
   )
 }
 

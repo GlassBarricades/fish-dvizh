@@ -7,12 +7,15 @@ import { useCompetitionJudges, useCreateJudgeInvitation, useIsUserJudge } from '
 import { useCompetitionParticipants, useCreateResult, useResults, useUpdateResult, useDeleteResult } from '../features/results/hooks'
 import { useFishKinds } from '../features/dicts/fish/hooks'
 import { TeamsTab } from '../features/teams/TeamsTab'
+import { ZonesTab } from '../features/zones/ZonesTab'
 import { ScheduleTab } from '../features/schedule/ScheduleTab'
 import { useTeamSizes } from '../features/dicts/teamSizes/hooks'
 import { useCompetitionFormats } from '../features/dicts/formats/hooks'
-// duplicates removed
 import { notifications } from '@mantine/notifications'
 import { useSetParticipantCheckin } from '../features/results/hooks'
+import { useZones } from '../features/zones/hooks'
+import { useAssignJudge, useZoneJudges, useRoundAssignments } from '../features/zones/assignments/hooks'
+import { useRounds } from '../features/schedule/hooks'
 
 export default function CompetitionPage() {
   const { competitionId } = useParams()
@@ -22,16 +25,19 @@ export default function CompetitionPage() {
 
   if (!competitionId) return <Text>Нет соревнования</Text>
 
+  const [activeTab, setActiveTab] = useState<string>('overview')
+
   return (
     <Stack p="md">
       <Title order={2}>{competition?.title ?? 'Соревнование'}</Title>
-      <Tabs defaultValue="overview">
+      <Tabs value={activeTab} onChange={(v) => setActiveTab(v ?? 'overview')}>
         <Tabs.List>
           <Tabs.Tab value="overview">Обзор</Tabs.Tab>
           <Tabs.Tab value="teams">{(teamSizes?.find(s => s.id === competition?.team_size_id)?.size === 1) ? 'Участники' : 'Команды'}</Tabs.Tab>
           <Tabs.Tab value="judges">Судьи</Tabs.Tab>
           <Tabs.Tab value="results">Результаты</Tabs.Tab>
           <Tabs.Tab value="schedule">Расписание</Tabs.Tab>
+          <Tabs.Tab value="zones">Зоны</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="overview" pt="md">
@@ -51,6 +57,11 @@ export default function CompetitionPage() {
         <Tabs.Panel value="schedule" pt="md">
           {competition && (
             <ScheduleTab competitionId={competition.id} />
+          )}
+        </Tabs.Panel>
+        <Tabs.Panel value="zones" pt="md">
+          {competition && (
+            <ZonesTab competitionId={competition.id} canEdit={!!(user?.id && (user?.id === competition.created_by || (user as any)?.user_metadata?.role === 'admin'))} active={activeTab === 'zones'} />
           )}
         </Tabs.Panel>
       </Tabs>
@@ -149,7 +160,11 @@ function InfoFromDrawer({ competitionId }: { competitionId: string }) {
 function JudgesTab({ competitionId, currentUserId }: { competitionId: string; currentUserId?: string }) {
   const { data: judges } = useCompetitionJudges(competitionId)
   const { mutateAsync: inviteJudge, isPending } = useCreateJudgeInvitation()
+  const { data: zones } = useZones(competitionId)
+  const { data: zoneJudges } = useZoneJudges(competitionId)
+  const { mutateAsync: assignJudge, isPending: assigning } = useAssignJudge(competitionId)
   const [email, setEmail] = useState('')
+  const [selected, setSelected] = useState<Record<string, string>>({})
 
   return (
     <Stack>
@@ -176,7 +191,21 @@ function JudgesTab({ competitionId, currentUserId }: { competitionId: string; cu
                 <Text fw={500}>{j.user_nickname || j.user_email || j.user_id}</Text>
                 <Text size="sm" c="dimmed">Судья</Text>
               </Stack>
-              <Badge variant="light">Добавлен</Badge>
+              <Group>
+                <Select
+                  placeholder="Зона"
+                  data={(zones ?? []).map((z: any) => ({ value: z.id, label: z.name }))}
+                  value={selected[j.user_id] ?? (zoneJudges?.find((zj) => zj.user_id === j.user_id)?.zone_id ?? null)}
+                  onChange={(v) => setSelected((s) => ({ ...s, [j.user_id]: v || '' }))}
+                  maw={260}
+                />
+                <Button size="xs" loading={assigning} disabled={!selected[j.user_id]} onClick={async () => {
+                  if (!selected[j.user_id]) return
+                  await assignJudge({ zone_id: selected[j.user_id], user_id: j.user_id })
+                  setSelected((s) => ({ ...s, [j.user_id]: '' }))
+                }}>Назначить</Button>
+                <Badge variant="light">Добавлен</Badge>
+              </Group>
             </Group>
           </Paper>
         ))}
@@ -195,6 +224,13 @@ function ResultsTab({ competitionId, currentUserId, competitionCreatorId, curren
   const { data: isJudge } = useIsUserJudge(competitionId, currentUserId)
   const canEditAll = !!(currentUserId && (currentUserRole === 'admin' || currentUserId === competitionCreatorId || isJudge))
   const { mutateAsync: setCheckin } = useSetParticipantCheckin(competitionId)
+  const { data: rounds } = useRounds(competitionId)
+  const [selectedRoundId, setSelectedRoundId] = useState<string | null>(null)
+  const activeRoundId = selectedRoundId || (rounds ?? []).find((r: any) => r.kind === 'round' && r.status === 'ongoing')?.id || null
+  const { data: assignments } = useRoundAssignments(activeRoundId || '')
+  const { data: zoneJudges } = useZoneJudges(competitionId)
+  const judgeZoneId = (zoneJudges ?? []).find((z) => z.user_id === currentUserId)?.zone_id
+  // Ограничение по зоне для судей будет добавлено позже (когда выберем активный тур в UI)
 
   const [participantId, setParticipantId] = useState<string | null>(null)
   const [fishId, setFishId] = useState<string | null>(null)
@@ -203,10 +239,35 @@ function ResultsTab({ competitionId, currentUserId, competitionCreatorId, curren
 
   return (
     <Stack>
+      {/* выбор тура и фильтр по зоне судьи */}
+      <Group>
+        <Select
+          label="Тур"
+          placeholder="Активный"
+          data={(rounds ?? []).filter((r: any) => r.kind === 'round').map((r: any) => ({ value: r.id, label: `${r.index}. ${r.title}` }))}
+          value={selectedRoundId}
+          onChange={setSelectedRoundId}
+          maw={260}
+        />
+        {isJudge && judgeZoneId && <Badge variant="light">Ваша зона</Badge>}
+      </Group>
+
       {canEditAll && (
       <Paper p="md" withBorder>
         <Group grow align="end">
-          <Select label="Участник" data={(participants ?? []).map(p => ({ value: p.user_id, label: p.user_nickname || p.user_email || p.user_id }))} value={participantId} onChange={setParticipantId} searchable />
+          <Select
+            label="Участник"
+            data={(participants ?? [])
+              .filter((p) => {
+                if (!isJudge || !judgeZoneId || !activeRoundId || !assignments) return true
+                const a = assignments.find((x: any) => x.participant_user_id === p.user_id)
+                return a ? a.zone_id === judgeZoneId : false
+              })
+              .map(p => ({ value: p.user_id, label: p.user_nickname || p.user_email || p.user_id }))}
+            value={participantId}
+            onChange={setParticipantId}
+            searchable
+          />
           <Select label="Вид рыбы" data={(fishKinds ?? []).map(f => ({ value: f.id, label: f.name }))} value={fishId} onChange={setFishId} searchable />
           <NumberInput label="Вес (г)" value={weight} onChange={(v) => setWeight(typeof v === 'number' ? v : v === '' ? '' : Number(v))} min={0} clampBehavior="strict" />
           <NumberInput label="Длина (см)" value={length} onChange={(v) => setLength(typeof v === 'number' ? v : v === '' ? '' : Number(v))} min={0} clampBehavior="strict" />

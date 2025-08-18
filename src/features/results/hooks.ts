@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createResult, deleteResult, fetchCompetitionParticipants, listResults, updateResult, setParticipantCheckin } from './api'
+import { createResult, deleteResult, fetchCompetitionParticipants, listResults, updateResult, setParticipantCheckin, getUserZoneForRound, listResultsInRange } from './api'
 import type { CreateResultInput, UpdateResultInput } from './types'
 
 export function useCompetitionParticipants(competitionId: string) {
@@ -47,6 +47,18 @@ export function useSetParticipantCheckin(competitionId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['participants', competitionId] })
     },
+  })
+}
+
+export function useUserZone(roundId?: string, userId?: string) {
+  return useQuery({ queryKey: ['user-zone', roundId, userId], queryFn: () => getUserZoneForRound(roundId!, userId!), enabled: !!roundId && !!userId })
+}
+
+export function useResultsInRange(competitionId?: string, fromIso?: string | null, toIso?: string | null) {
+  return useQuery({
+    queryKey: ['results-range', competitionId, fromIso, toIso],
+    queryFn: () => listResultsInRange(competitionId!, fromIso, toIso),
+    enabled: !!competitionId,
   })
 }
 

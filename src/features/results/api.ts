@@ -128,4 +128,34 @@ export async function setParticipantCheckin(competitionId: string, userId: strin
   if (error) throw error
 }
 
+// Utility to get zone for user in current round
+export async function getUserZoneForRound(roundId: string, userId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('round_zone_assignments')
+    .select('zone_id')
+    .eq('round_id', roundId)
+    .eq('participant_user_id', userId)
+    .maybeSingle()
+  if (error) throw error
+  return (data as any)?.zone_id ?? null
+}
+
+export async function listResultsInRange(
+  competitionId: string,
+  fromIso?: string | null,
+  toIso?: string | null
+): Promise<Array<{ participant_user_id: string; weight_grams: number | null; length_cm: number | null; created_at: string }>> {
+  let query = supabase
+    .from(TABLE)
+    .select('participant_user_id, weight_grams, length_cm, created_at')
+    .eq('competition_id', competitionId)
+
+  if (fromIso) query = query.gte('created_at', fromIso)
+  if (toIso) query = query.lte('created_at', toIso)
+
+  const { data, error } = await query
+  if (error) throw error
+  return (data as any[]) || []
+}
+
 

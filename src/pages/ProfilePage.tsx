@@ -19,6 +19,7 @@ import { useAuth } from '../features/auth/hooks'
 import { useUserTeams, useCreateTeam, useDeleteTeam, useCreateTeamInvitation, useUserInvitations, useAcceptTeamInvitation } from '../features/teams/hooks'
 import type { Team } from '../features/teams/types'
 import { useNavigate } from 'react-router-dom'
+import { useUserJudgeInvitations, useRespondJudgeInvitation } from '../features/judges/hooks'
 
 export default function ProfilePage() {
   const { user } = useAuth()
@@ -28,6 +29,8 @@ export default function ProfilePage() {
   const { mutateAsync: createTeam, isPending: isCreating } = useCreateTeam()
   const { mutateAsync: createInvitation, isPending: isInviting } = useCreateTeamInvitation()
   const { mutateAsync: acceptInvitation } = useAcceptTeamInvitation()
+  const { data: judgeInvites } = useUserJudgeInvitations(user?.id)
+  const { mutateAsync: respondJudgeInvite } = useRespondJudgeInvitation()
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
@@ -266,6 +269,34 @@ export default function ProfilePage() {
                     У вас нет активных приглашений
                   </Text>
                 )}
+                <Title order={3}>Приглашения судьи</Title>
+                <Stack gap="md">
+                  {(judgeInvites ?? []).length === 0 && (
+                    <Text c="dimmed">Приглашений нет</Text>
+                  )}
+                  {(judgeInvites ?? []).map((inv) => (
+                    <Paper key={inv.id} p="md" withBorder>
+                      <Group justify="space-between">
+                        <Stack gap={4}>
+                          <Text>Турнир: {inv.competition_title || inv.competition_id}</Text>
+                          <Text size="sm" c="dimmed">Статус: {inv.status}</Text>
+                        </Stack>
+                        {inv.status === 'pending' && (
+                          <Group gap="xs">
+                            <Button size="sm" color="green" variant="light" onClick={async () => {
+                              await respondJudgeInvite({ invitation_id: inv.id, accept: true, userId: user.id })
+                              notifications.show({ color: 'green', message: 'Вы приняли приглашение судьи' })
+                            }}>Принять</Button>
+                            <Button size="sm" color="red" variant="light" onClick={async () => {
+                              await respondJudgeInvite({ invitation_id: inv.id, accept: false, userId: user.id })
+                              notifications.show({ color: 'gray', message: 'Вы отклонили приглашение' })
+                            }}>Отклонить</Button>
+                          </Group>
+                        )}
+                      </Group>
+                    </Paper>
+                  ))}
+                </Stack>
               </Stack>
             </Tabs.Panel>
           </Tabs>
