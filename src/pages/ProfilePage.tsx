@@ -70,7 +70,8 @@ export default function ProfilePage() {
       await createInvitation({
         team_id: selectedTeam.id,
         invited_user_email: values.email.trim(),
-        invited_by: user.id, // Добавляем ID текущего пользователя
+        invited_by: user.id,
+        role: 'member',
       })
       notifications.show({ color: 'green', message: 'Приглашение отправлено' })
       setIsInviteModalOpen(false)

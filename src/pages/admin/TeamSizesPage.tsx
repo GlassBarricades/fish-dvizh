@@ -90,7 +90,7 @@ export default function TeamSizesPage() {
 
       <Modal opened={opened} onClose={close} title={editingId ? 'Редактировать размер команды' : 'Новый размер команды'}>
         <TextInput label="Название" value={name} onChange={(e) => setName(e.currentTarget.value)} autoFocus />
-        <NumberInput label="Количество участников" value={size} onChange={setSize} min={1} step={1} />
+        <NumberInput label="Количество участников" value={size} onChange={(v) => setSize(v === '' ? '' : Number(v))} min={1} step={1} />
         <Group justify="flex-end" mt="md">
           <Button variant="subtle" onClick={close}>Отмена</Button>
           <Button onClick={handleSubmit}>Сохранить</Button>

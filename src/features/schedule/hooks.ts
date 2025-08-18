@@ -20,7 +20,7 @@ export function useUpdateRound() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: UpdateRoundInput }) => updateRound(id, input),
-    onSuccess: (_d, variables) => {
+    onSuccess: (_d) => {
       // Need competition id to invalidate; caller should follow-up or we refetch all
       qc.invalidateQueries({ queryKey: ['rounds'] })
     },
@@ -30,9 +30,9 @@ export function useUpdateRound() {
 export function useDeleteRound() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, competitionId }: { id: string; competitionId: string }) => deleteRound(id),
+    mutationFn: ({ id }: { id: string; competitionId: string }) => deleteRound(id),
     onSuccess: (_d, variables) => {
-      qc.invalidateQueries({ queryKey: ['rounds', variables.competitionId] })
+      qc.invalidateQueries({ queryKey: ['rounds', (variables as any).competitionId] })
     },
   })
 }

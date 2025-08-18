@@ -87,7 +87,7 @@ export function EditCompetitionModal(props: Props) {
         label={teamSizes?.find((s) => s.id === teamSizeId)?.size === 1 ? 'Лимит участников (соло)' : 'Лимит команд'}
         placeholder="Без лимита"
         value={maxSlots}
-        onChange={setMaxSlots}
+        onChange={(value) => setMaxSlots(value === '' ? '' : Number(value))}
         min={1}
         clampBehavior="strict"
       />
