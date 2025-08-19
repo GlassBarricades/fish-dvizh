@@ -158,4 +158,22 @@ export async function listResultsInRange(
   return (data as any[]) || []
 }
 
+// Team participants for team standings
+export async function listTeamParticipants(
+  competitionId: string
+): Promise<Array<{ team_id: string; team_name?: string | null; participant_user_ids: string[] }>> {
+  const { data, error } = await supabase
+    .from('team_participations')
+    .select('team_id, participant_user_ids, teams!inner(name)')
+    .eq('competition_id', competitionId)
+    .in('status', ['registered','confirmed'])
+  if (error) throw error
+  const rows = (data as any[]) || []
+  return rows.map((r: any) => ({
+    team_id: r.team_id,
+    team_name: r.teams?.name ?? null,
+    participant_user_ids: Array.isArray(r.participant_user_ids) ? r.participant_user_ids : [],
+  }))
+}
+
 

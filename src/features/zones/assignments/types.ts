@@ -19,4 +19,23 @@ export type DrawAssignmentsInput = {
   round_id: string
 }
 
+export type DrawAllAssignmentsInput = {
+  competition_id: string
+}
+
+export type LockedAssignment = {
+  round_id: string
+  participant_user_id: string
+  zone_id: string
+}
+
+export type PreviewAllAssignmentsInput = {
+  competition_id: string
+  locked?: LockedAssignment[]
+}
+
+export type ApplyAssignmentsInput = {
+  assignments: RoundZoneAssignment[]
+}
+
 

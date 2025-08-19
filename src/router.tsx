@@ -2,6 +2,8 @@ import { createBrowserRouter } from 'react-router-dom'
 import App from './App'
 import HomePage from './pages/HomePage'
 import MapPage from './pages/MapPage'
+import ScoreboardPage from './pages/ScoreboardPage'
+import ResultsPublicPage from './pages/ResultsPublicPage'
 import AuthPage from './pages/AuthPage'
 import CheckEmailPage from './pages/CheckEmailPage'
 import AdminPage from './pages/AdminPage'
@@ -20,6 +22,8 @@ export const router = createBrowserRouter([
       { path: 'admin', element: <AdminPage /> },
       { path: 'profile', element: <ProfilePage /> },
       { path: 'team/:teamId', element: <TeamPage /> },
+      { path: 'scoreboard/:competitionId', element: <ScoreboardPage /> },
+      { path: 'results/:competitionId', element: <ResultsPublicPage /> },
     ],
   },
 ])

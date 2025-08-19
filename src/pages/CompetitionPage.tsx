@@ -16,6 +16,7 @@ import { useSetParticipantCheckin } from '../features/results/hooks'
 import { useZones } from '../features/zones/hooks'
 import { useAssignJudge, useZoneJudges, useRoundAssignments } from '../features/zones/assignments/hooks'
 import { useRounds } from '../features/schedule/hooks'
+import { useCompetitionRoles, useAssignCompetitionRole, useRemoveCompetitionRole } from '../features/competitionRoles/hooks'
 
 export default function CompetitionPage() {
   const { competitionId } = useParams()
@@ -42,6 +43,7 @@ export default function CompetitionPage() {
 
         <Tabs.Panel value="overview" pt="md">
           <InfoFromDrawer competitionId={competitionId} />
+          <CompetitionRolesPanel competitionId={competitionId} />
         </Tabs.Panel>
         <Tabs.Panel value="teams" pt="md">
           {competition && (
@@ -152,6 +154,42 @@ function InfoFromDrawer({ competitionId }: { competitionId: string }) {
         {typeof competition?.lat === 'number' && typeof competition?.lng === 'number' && (
           <Text size="sm"><strong>Координаты:</strong> {competition.lat.toFixed(6)}, {competition.lng.toFixed(6)}</Text>
         )}
+      </Stack>
+    </Paper>
+  )
+}
+
+function CompetitionRolesPanel({ competitionId }: { competitionId: string }) {
+  const { data: roles } = useCompetitionRoles(competitionId)
+  const assign = useAssignCompetitionRole()
+  const remove = useRemoveCompetitionRole(competitionId)
+  const [role, setRole] = useState<'organizer' | 'chief_judge' | 'secretary' | 'zone_judge'>('zone_judge')
+  const [userId, setUserId] = useState('')
+  return (
+    <Paper p="md" withBorder mt="md">
+      <Stack>
+        <Text fw={600}>Роли в соревновании</Text>
+        <Group>
+          <Select maw={220} label="Роль" value={role} onChange={(v) => setRole((v as any) || 'zone_judge')} data={[
+            { value: 'organizer', label: 'Организатор' },
+            { value: 'chief_judge', label: 'Главный судья' },
+            { value: 'secretary', label: 'Секретарь' },
+            { value: 'zone_judge', label: 'Судья зоны' },
+          ]} />
+          <TextInput label="User ID" placeholder="id пользователя (временно, позже по email)" value={userId} onChange={(e) => setUserId(e.currentTarget.value)} maw={360} />
+          <Button onClick={async () => {
+            if (!userId) return
+            await assign.mutateAsync({ competition_id: competitionId, user_id: userId, role })
+          }}>Назначить</Button>
+        </Group>
+        <Stack>
+          {(roles ?? []).map((r: any) => (
+            <Group key={r.user_id + r.role} justify="space-between">
+              <Text>{r.user_nickname || r.user_email || r.user_id} — {r.role}</Text>
+              <Button size="xs" variant="light" color="red" onClick={() => remove.mutate({ user_id: r.user_id, role: r.role })}>Удалить</Button>
+            </Group>
+          ))}
+        </Stack>
       </Stack>
     </Paper>
   )

@@ -33,6 +33,9 @@ const AdminDictsPage = lazy(() => import('./pages/admin/DictsPage'))
 const FishKindsPage = lazy(() => import('./pages/admin/FishKindsPage'))
 const CompetitionFormatsPage = lazy(() => import('./pages/admin/CompetitionFormatsPage'))
 const TeamSizesPage = lazy(() => import('./pages/admin/TeamSizesPage'))
+const ScoreboardPage = lazy(() => import('./pages/ScoreboardPage'))
+const ResultsPublicPage = lazy(() => import('./pages/ResultsPublicPage'))
+const JudgePage = lazy(() => import('./pages/JudgePage'))
 const router = createBrowserRouter([
   {
     path: '/',
@@ -63,6 +66,9 @@ const router = createBrowserRouter([
   },
   { path: '/auth', element: <Suspense fallback={null}><AuthPage /></Suspense> },
   { path: '/check-email', element: <Suspense fallback={null}><CheckEmailPage /></Suspense> },
+  { path: '/scoreboard/:competitionId', element: <Suspense fallback={null}><ScoreboardPage /></Suspense> },
+  { path: '/results/:competitionId', element: <Suspense fallback={null}><ResultsPublicPage /></Suspense> },
+  { path: '/judge/:competitionId', element: <Suspense fallback={null}><JudgePage /></Suspense> },
 ])
 
 const queryClient = new QueryClient()
