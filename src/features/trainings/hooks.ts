@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createCatch, createTraining, deleteCatch, deleteTraining, fetchTeamTrainings, fetchTrainingById, fetchUserTrainings, listTrainingCatches, listTrainingTakenBaits, setTrainingTakenBaits, updateCatch, updateTraining } from './api'
+import { createCatch, createTraining, deleteCatch, deleteTraining, fetchTeamTrainings, fetchTrainingById, fetchUserTrainings, listTrainingCatches, listTrainingTakenBaits, setTrainingTakenBaits, updateCatch, updateTraining, fetchTrainingPlan, upsertTrainingPlan, listTrainingSegments, createTrainingSegment, deleteTrainingSegment, listTrainingTasks, createTrainingTask, updateTrainingTask, deleteTrainingTask } from './api'
 import type { CreateTrainingInput, UpdateTrainingInput } from './types'
 
 export function useUserTrainings(userId: string | undefined) {
@@ -98,6 +98,83 @@ export function useCreateTraining() {
       // noop here; UI already shows error via try/catch
       console.error('createTraining error', e?.message || e)
     }
+  })
+}
+
+// Plan
+export function useTrainingPlan(trainingId: string | undefined) {
+  return useQuery({
+    queryKey: ['training-plan', trainingId],
+    queryFn: () => fetchTrainingPlan(trainingId as string),
+    enabled: !!trainingId,
+  })
+}
+
+export function useUpsertTrainingPlan() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: upsertTrainingPlan,
+    onSuccess: (plan) => {
+      qc.invalidateQueries({ queryKey: ['training-plan', plan.training_id] })
+    },
+  })
+}
+
+// Segments
+export function useTrainingSegments(trainingId: string | undefined) {
+  return useQuery({
+    queryKey: ['training-segments', trainingId],
+    queryFn: () => listTrainingSegments(trainingId as string),
+    enabled: !!trainingId,
+  })
+}
+
+export function useCreateTrainingSegment() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: createTrainingSegment,
+    onSuccess: (seg) => qc.invalidateQueries({ queryKey: ['training-segments', seg.training_id] }),
+  })
+}
+
+export function useDeleteTrainingSegment() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, trainingId }: { id: string; trainingId: string }) => deleteTrainingSegment(id),
+    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: ['training-segments', vars.trainingId] }),
+  })
+}
+
+// Tasks
+export function useTrainingTasks(trainingId: string | undefined) {
+  return useQuery({
+    queryKey: ['training-tasks', trainingId],
+    queryFn: () => listTrainingTasks(trainingId as string),
+    enabled: !!trainingId,
+  })
+}
+
+export function useCreateTrainingTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: createTrainingTask,
+    onSuccess: (task) => qc.invalidateQueries({ queryKey: ['training-tasks', task.training_id] }),
+  })
+}
+
+export function useUpdateTrainingTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, input, trainingId }: { id: string; input: any; trainingId: string }) => updateTrainingTask(id, input),
+    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: ['training-tasks', vars.trainingId] }),
+  })
+}
+
+export function useDeleteTrainingTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, trainingId }: { id: string; trainingId: string }) => deleteTrainingTask(id),
+    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: ['training-tasks', vars.trainingId] }),
   })
 }
 

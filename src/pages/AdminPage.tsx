@@ -24,6 +24,7 @@ export default function AdminPage() {
               <NavLink component={Link} to="/admin/users" label="Пользователи" active={active('/admin/users')} />
               <NavLink component={Link} to="/admin/dicts" label="Справочники">
                 <NavLink component={Link} to="/admin/dicts/fish" label="Виды рыбы" active={active('/admin/dicts/fish')} />
+                <NavLink component={Link} to="/admin/dicts/bait-manufacturers" label="Производители приманок" active={active('/admin/dicts/bait-manufacturers')} />
                 <NavLink component={Link} to="/admin/dicts/bait-types" label="Типы приманок" active={active('/admin/dicts/bait-types')} />
                 <NavLink component={Link} to="/admin/dicts/baits" label="Приманки" active={active('/admin/dicts/baits')} />
                 <NavLink component={Link} to="/admin/dicts/formats" label="Форматы соревнований" active={active('/admin/dicts/formats')} />
@@ -43,6 +44,7 @@ export default function AdminPage() {
           <NavLink component={Link} to="/admin/users" label="Пользователи" active={active('/admin/users')} onClick={closeMobile} />
           <NavLink component={Link} to="/admin/dicts" label="Справочники">
             <NavLink component={Link} to="/admin/dicts/fish" label="Виды рыбы" active={active('/admin/dicts/fish')} onClick={closeMobile} />
+            <NavLink component={Link} to="/admin/dicts/bait-manufacturers" label="Производители приманок" active={active('/admin/dicts/bait-manufacturers')} onClick={closeMobile} />
             <NavLink component={Link} to="/admin/dicts/bait-types" label="Типы приманок" active={active('/admin/dicts/bait-types')} onClick={closeMobile} />
             <NavLink component={Link} to="/admin/dicts/baits" label="Приманки" active={active('/admin/dicts/baits')} onClick={closeMobile} />
             <NavLink component={Link} to="/admin/dicts/formats" label="Форматы соревнований" active={active('/admin/dicts/formats')} onClick={closeMobile} />

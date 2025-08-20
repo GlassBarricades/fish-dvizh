@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { Button, Card, Group, Modal, Stack, Table, TextInput, Title, Select } from '@mantine/core'
+import { ActionIcon, Button, Card, Group, Modal, Stack, Table, TextInput, Title, Select } from '@mantine/core'
+import { IconPencil, IconTrash } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useBaits, useCreateBait, useDeleteBait, useUpdateBait } from '../../features/dicts/baits/hooks'
 import { useBaitTypes } from '../../features/dicts/baitTypes/hooks'
+import { useBaitManufacturers } from '../../features/dicts/baitManufacturers/hooks'
 
 export default function BaitsPage() {
   const { data } = useBaits()
@@ -10,20 +12,26 @@ export default function BaitsPage() {
   const { mutateAsync: updateBait, isPending: updating } = useUpdateBait()
   const { mutateAsync: deleteBait, isPending: deleting } = useDeleteBait()
   const { data: baitTypes } = useBaitTypes()
+  const { data: manufacturers } = useBaitManufacturers()
 
   const [opened, setOpened] = useState(false)
-  const [edit, setEdit] = useState<{ id?: string; brand: string; name: string; type_id?: string | null; color?: string; size?: string }>({ brand: '', name: '', type_id: undefined, color: '', size: '' })
+  const [edit, setEdit] = useState<{ id?: string; name: string; type_id?: string | null; color?: string; size?: string; manufacturer_id?: string | null }>({ name: '', type_id: undefined, color: '', size: '', manufacturer_id: undefined })
 
   const rows = (data ?? []).map((b) => (
     <tr key={b.id}>
-      <td>{b.brand}</td>
+      <td>{manufacturers?.find(m => m.id === (b as any).manufacturer_id)?.name || b.brand || '—'}</td>
+      <td>{(baitTypes ?? []).find(t => t.id === (b as any).type_id)?.name || '—'}</td>
       <td>{b.name}</td>
       <td>{b.color || '—'}</td>
       <td>{b.size || '—'}</td>
-      <td>
-        <Group gap="xs">
-          <Button size="xs" variant="light" onClick={() => { setEdit({ id: b.id, brand: b.brand, name: b.name, type_id: (b as any).type_id || undefined, color: b.color || '', size: b.size || '' }); setOpened(true) }}>Редактировать</Button>
-          <Button size="xs" color="red" variant="light" onClick={async () => { await deleteBait(b.id); notifications.show({ color: 'gray', message: 'Удалено' }) }} loading={deleting}>Удалить</Button>
+      <td style={{ width: 120 }}>
+        <Group gap="xs" justify="flex-end">
+          <ActionIcon variant="subtle" onClick={() => { setEdit({ id: b.id, name: b.name, type_id: (b as any).type_id || undefined, color: b.color || '', size: b.size || '', manufacturer_id: (b as any).manufacturer_id || undefined }); setOpened(true) }}>
+            <IconPencil size={16} />
+          </ActionIcon>
+          <ActionIcon variant="subtle" color="red" onClick={async () => { await deleteBait(b.id); notifications.show({ color: 'gray', message: 'Удалено' }) }} loading={deleting}>
+            <IconTrash size={16} />
+          </ActionIcon>
         </Group>
       </td>
     </tr>
@@ -33,12 +41,13 @@ export default function BaitsPage() {
     <Card withBorder p="lg">
       <Group justify="space-between" mb="md">
         <Title order={3}>Приманки</Title>
-        <Button onClick={() => { setEdit({ brand: '', name: '', color: '', size: '' }); setOpened(true) }}>Добавить</Button>
+        <Button onClick={() => { setEdit({ name: '', color: '', size: '', manufacturer_id: undefined }); setOpened(true) }}>Добавить</Button>
       </Group>
       <Table withTableBorder withColumnBorders striped highlightOnHover>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Фирма</Table.Th>
+            <Table.Th>Производитель</Table.Th>
+            <Table.Th>Тип</Table.Th>
             <Table.Th>Название</Table.Th>
             <Table.Th>Цвет</Table.Th>
             <Table.Th>Размер</Table.Th>
@@ -50,7 +59,7 @@ export default function BaitsPage() {
 
       <Modal opened={opened} onClose={() => setOpened(false)} title={edit.id ? 'Редактировать приманку' : 'Добавить приманку'}>
         <Stack>
-          <TextInput label="Фирма" value={edit.brand} onChange={(e) => setEdit({ ...edit, brand: e.currentTarget.value })} required />
+          <Select label="Производитель" placeholder="Выберите" data={(manufacturers ?? []).map(m => ({ value: m.id, label: m.name }))} value={edit.manufacturer_id ?? undefined} onChange={(v) => setEdit({ ...edit, manufacturer_id: v || undefined })} searchable clearable required />
           <TextInput label="Название" value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.currentTarget.value })} required />
           <Select label="Тип приманки" placeholder="Выберите" data={(baitTypes ?? []).map(t => ({ value: t.id, label: t.name }))} value={edit.type_id ?? undefined} onChange={(v) => setEdit({ ...edit, type_id: v || undefined })} searchable clearable />
           <TextInput label="Цвет" value={edit.color} onChange={(e) => setEdit({ ...edit, color: e.currentTarget.value })} />
@@ -58,8 +67,9 @@ export default function BaitsPage() {
           <Group justify="flex-end">
             <Button variant="outline" onClick={() => setOpened(false)}>Отмена</Button>
             <Button loading={creating || updating} onClick={async () => {
-              const payload = { brand: edit.brand.trim(), name: edit.name.trim(), type_id: edit.type_id || null, color: edit.color?.trim() || undefined, size: edit.size?.trim() || undefined }
-              if (!payload.brand || !payload.name) return
+              const manufacturerName = (manufacturers ?? []).find(m => m.id === (edit.manufacturer_id || ''))?.name || ''
+              const payload = { brand: manufacturerName, name: edit.name.trim(), type_id: edit.type_id || null, manufacturer_id: edit.manufacturer_id || null, color: edit.color?.trim() || undefined, size: edit.size?.trim() || undefined }
+              if (!payload.brand || !payload.name || !edit.manufacturer_id) return
               if (edit.id) {
                 await updateBait({ id: edit.id, input: payload })
                 notifications.show({ color: 'green', message: 'Сохранено' })

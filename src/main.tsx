@@ -36,6 +36,7 @@ const FishKindsPage = lazy(() => import('./pages/admin/FishKindsPage'))
 const CompetitionFormatsPage = lazy(() => import('./pages/admin/CompetitionFormatsPage'))
 const TeamSizesPage = lazy(() => import('./pages/admin/TeamSizesPage'))
 const BaitsPage = lazy(() => import('./pages/admin/BaitsPage'))
+const BaitManufacturersPage = lazy(() => import('./pages/admin/BaitManufacturersPage'))
 const BaitTypesPage = lazy(() => import('./pages/admin/BaitTypesPage'))
 const ScoreboardPage = lazy(() => import('./pages/ScoreboardPage'))
 const ResultsPublicPage = lazy(() => import('./pages/ResultsPublicPage'))
@@ -65,6 +66,7 @@ const router = createBrowserRouter([
           { path: 'dicts/fish', element: <Suspense fallback={null}><FishKindsPage /></Suspense> },
           { path: 'dicts/formats', element: <Suspense fallback={null}><CompetitionFormatsPage /></Suspense> },
           { path: 'dicts/team-sizes', element: <Suspense fallback={null}><TeamSizesPage /></Suspense> },
+          { path: 'dicts/bait-manufacturers', element: <Suspense fallback={null}><BaitManufacturersPage /></Suspense> },
           { path: 'dicts/bait-types', element: <Suspense fallback={null}><BaitTypesPage /></Suspense> },
           { path: 'dicts/baits', element: <Suspense fallback={null}><BaitsPage /></Suspense> },
         ],

@@ -3,6 +3,7 @@ import { supabase } from '../../../lib/supabaseClient'
 export type Bait = {
   id: string
   brand: string
+  manufacturer_id?: string | null
   name: string
   type_id?: string | null
   color?: string | null
@@ -22,7 +23,7 @@ export async function listBaits(): Promise<Bait[]> {
   return (data || []) as Bait[]
 }
 
-export async function createBait(input: { brand: string; name: string; type_id?: string | null; color?: string; size?: string }): Promise<Bait> {
+export async function createBait(input: { brand: string; name: string; type_id?: string | null; color?: string; size?: string; manufacturer_id?: string | null }): Promise<Bait> {
   const { data, error } = await supabase
     .from(TABLE)
     .insert(input)
@@ -32,7 +33,7 @@ export async function createBait(input: { brand: string; name: string; type_id?:
   return data as Bait
 }
 
-export async function updateBait(id: string, input: Partial<{ brand: string; name: string; type_id?: string | null; color?: string; size?: string }>): Promise<Bait> {
+export async function updateBait(id: string, input: Partial<{ brand: string; name: string; type_id?: string | null; color?: string; size?: string; manufacturer_id?: string | null }>): Promise<Bait> {
   const { data, error } = await supabase
     .from(TABLE)
     .update(input)

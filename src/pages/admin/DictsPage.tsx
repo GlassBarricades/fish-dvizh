@@ -11,6 +11,9 @@ export default function AdminDictsPage() {
           <Link to="/admin/dicts/fish">Виды рыбы</Link>
         </List.Item>
         <List.Item>
+          <Link to="/admin/dicts/bait-manufacturers">Производители приманок</Link>
+        </List.Item>
+        <List.Item>
           <Link to="/admin/dicts/bait-types">Типы приманок</Link>
         </List.Item>
         <List.Item>

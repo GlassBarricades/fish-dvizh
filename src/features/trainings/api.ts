@@ -157,6 +157,114 @@ export async function deleteCatch(id: string): Promise<void> {
   if (error) throw error
 }
 
+// Plan/Segments/Tasks
+export type TrainingPlan = {
+  training_id: string
+  goal?: string | null
+  notes?: string | null
+}
+
+export async function fetchTrainingPlan(trainingId: string): Promise<TrainingPlan | null> {
+  const { data, error } = await supabase
+    .from('training_plans')
+    .select('training_id,goal,notes')
+    .eq('training_id', trainingId)
+    .maybeSingle()
+  if (error) return null
+  return data as TrainingPlan
+}
+
+export async function upsertTrainingPlan(plan: TrainingPlan): Promise<TrainingPlan> {
+  const { data, error } = await supabase
+    .from('training_plans')
+    .upsert(plan, { onConflict: 'training_id' })
+    .select('training_id,goal,notes')
+    .single()
+  if (error) throw error
+  return data as TrainingPlan
+}
+
+export type TrainingSegment = {
+  id: string
+  training_id: string
+  name: string
+  area_geojson: any
+}
+
+export async function listTrainingSegments(trainingId: string): Promise<TrainingSegment[]> {
+  const { data, error } = await supabase
+    .from('training_segments')
+    .select('id,training_id,name,area_geojson')
+    .eq('training_id', trainingId)
+    .order('name', { ascending: true })
+  if (error) return []
+  return (data || []) as TrainingSegment[]
+}
+
+export async function createTrainingSegment(input: { training_id: string; name: string; area_points: [number, number][] }): Promise<TrainingSegment> {
+  const coordinates = [...input.area_points, input.area_points[0]]
+  const geo = { type: 'Polygon', coordinates: [coordinates.map(([lng, lat]) => [lng, lat])] }
+  const { data, error } = await supabase
+    .from('training_segments')
+    .insert({ training_id: input.training_id, name: input.name, area_geojson: geo })
+    .select('id,training_id,name,area_geojson')
+    .single()
+  if (error) throw error
+  return data as TrainingSegment
+}
+
+export async function deleteTrainingSegment(id: string): Promise<void> {
+  const { error } = await supabase.from('training_segments').delete().eq('id', id)
+  if (error) throw error
+}
+
+export type TrainingTask = {
+  id: string
+  training_id: string
+  title: string
+  starts_at: string
+  ends_at?: string | null
+  segment_id?: string | null
+  target_fish_kind_id?: string | null
+  notes?: string | null
+}
+
+export async function listTrainingTasks(trainingId: string): Promise<TrainingTask[]> {
+  const { data, error } = await supabase
+    .from('training_tasks')
+    .select('id,training_id,title,starts_at,ends_at,segment_id,target_fish_kind_id,notes')
+    .eq('training_id', trainingId)
+    .order('starts_at', { ascending: true })
+  if (error) return []
+  return (data || []) as TrainingTask[]
+}
+
+export async function createTrainingTask(input: Omit<TrainingTask, 'id'>): Promise<TrainingTask> {
+  const { data, error } = await supabase
+    .from('training_tasks')
+    .insert(input)
+    .select('id,training_id,title,starts_at,ends_at,segment_id,target_fish_kind_id,notes')
+    .single()
+  if (error) throw error
+  return data as TrainingTask
+}
+
+export async function updateTrainingTask(id: string, input: Partial<Omit<TrainingTask, 'id' | 'training_id'>>): Promise<TrainingTask> {
+  const { data, error } = await supabase
+    .from('training_tasks')
+    .update(input)
+    .eq('id', id)
+    .select('id,training_id,title,starts_at,ends_at,segment_id,target_fish_kind_id,notes')
+    .single()
+  if (error) throw error
+  return data as TrainingTask
+}
+
+export async function deleteTrainingTask(id: string): Promise<void> {
+  const { error } = await supabase.from('training_tasks').delete().eq('id', id)
+  if (error) throw error
+}
+
 export async function createTraining(input: CreateTrainingInput): Promise<Training> {
   // If polygon area passed as points, convert to GeoJSON polygon
   let payload: any = { ...input }

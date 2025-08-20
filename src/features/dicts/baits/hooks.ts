@@ -18,7 +18,7 @@ export function useCreateBait() {
 export function useUpdateBait() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: Partial<{ brand: string; name: string; color?: string; size?: string }> }) => updateBait(id, input),
+    mutationFn: ({ id, input }: { id: string; input: Partial<{ brand: string; name: string; color?: string; size?: string; type_id?: string | null; manufacturer_id?: string | null }> }) => updateBait(id, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   })
 }
