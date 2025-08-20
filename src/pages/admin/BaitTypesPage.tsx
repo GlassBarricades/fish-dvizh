@@ -15,7 +15,7 @@ export default function BaitTypesPage() {
   const rows = (data ?? []).map((t) => (
     <tr key={t.id}>
       <td>{t.name}</td>
-      <td width={200}>
+      <td style={{ width: 200 }}>
         <Group gap="xs">
           <Button size="xs" variant="light" onClick={() => { setEdit({ id: t.id, name: t.name }); setOpened(true) }}>Редактировать</Button>
           <Button size="xs" color="red" variant="light" onClick={async () => { await deleteType(t.id); notifications.show({ color: 'gray', message: 'Удалено' }) }} loading={deleting}>Удалить</Button>
@@ -34,7 +34,7 @@ export default function BaitTypesPage() {
         <Table.Thead>
           <Table.Tr>
             <Table.Th>Название</Table.Th>
-            <Table.Th width={200}></Table.Th>
+            <Table.Th style={{ width: 200 }}></Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>{rows}</Table.Tbody>

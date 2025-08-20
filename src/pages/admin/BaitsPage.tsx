@@ -42,7 +42,7 @@ export default function BaitsPage() {
             <Table.Th>Название</Table.Th>
             <Table.Th>Цвет</Table.Th>
             <Table.Th>Размер</Table.Th>
-            <Table.Th width={200}></Table.Th>
+            <Table.Th style={{ width: 200 }}></Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>{rows}</Table.Tbody>
