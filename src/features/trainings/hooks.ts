@@ -140,8 +140,8 @@ export function useCreateTrainingSegment() {
 export function useDeleteTrainingSegment() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, trainingId }: { id: string; trainingId: string }) => deleteTrainingSegment(id),
-    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: ['training-segments', vars.trainingId] }),
+    mutationFn: ({ id }: { id: string; trainingId: string }) => deleteTrainingSegment(id),
+    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: ['training-segments'] }),
   })
 }
 
@@ -165,16 +165,16 @@ export function useCreateTrainingTask() {
 export function useUpdateTrainingTask() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, input, trainingId }: { id: string; input: any; trainingId: string }) => updateTrainingTask(id, input),
-    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: ['training-tasks', vars.trainingId] }),
+    mutationFn: ({ id, input }: { id: string; input: any; trainingId: string }) => updateTrainingTask(id, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['training-tasks'] }),
   })
 }
 
 export function useDeleteTrainingTask() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, trainingId }: { id: string; trainingId: string }) => deleteTrainingTask(id),
-    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: ['training-tasks', vars.trainingId] }),
+    mutationFn: ({ id }: { id: string; trainingId: string }) => deleteTrainingTask(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['training-tasks'] }),
   })
 }
 
