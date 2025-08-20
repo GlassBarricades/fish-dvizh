@@ -7,7 +7,7 @@ export type Team = {
   updated_at: string
 }
 
-export type TeamRole = 'member' | 'captain' | 'creator'
+export type TeamRole = 'member' | 'captain' | 'coach' | 'creator'
 
 export type TeamMember = {
   id: string

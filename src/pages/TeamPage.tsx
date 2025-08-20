@@ -20,6 +20,21 @@ import {
   Paper,
   Box,
 } from "@mantine/core";
+import { DateTimePicker } from '@mantine/dates'
+import { MapContainer, TileLayer, Marker, Polygon, useMap, useMapEvents } from 'react-leaflet'
+import L from 'leaflet'
+import iconUrl from 'leaflet/dist/images/marker-icon.png'
+import iconShadowUrl from 'leaflet/dist/images/marker-shadow.png'
+
+const defaultIcon = new L.Icon({
+  iconUrl,
+  shadowUrl: iconShadowUrl,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+})
+L.Marker.prototype.options.icon = defaultIcon
 import {
   IconEdit,
   IconTrash,
@@ -49,6 +64,7 @@ import {
 } from "../features/teams/hooks";
 import { useAuth } from "../features/auth/hooks";
 import { notifications } from "@mantine/notifications";
+import { useTeamTrainings, useCreateTraining, useDeleteTraining } from '../features/trainings/hooks'
 
 export default function TeamPage() {
   const { teamId } = useParams<{ teamId: string }>();
@@ -64,6 +80,10 @@ export default function TeamPage() {
   const { data: invitations, isLoading: invitationsLoading } =
     useTeamInvitations(teamId!);
 
+  const { data: teamTrainings } = useTeamTrainings(teamId)
+  const { mutateAsync: createTraining, isPending: isCreatingTraining } = useCreateTraining()
+  const { mutateAsync: deleteTraining, isPending: isDeletingTraining } = useDeleteTraining()
+
   const updateTeam = useUpdateTeam();
   const deleteTeam = useDeleteTeam();
   const removeMember = useRemoveTeamMember();
@@ -74,6 +94,7 @@ export default function TeamPage() {
   const [editModalOpened, editModalHandlers] = useDisclosure(false);
   const [deleteModalOpened, deleteModalHandlers] = useDisclosure(false);
   const [inviteModalOpened, inviteModalHandlers] = useDisclosure(false);
+  const [createTrainingOpened, createTrainingHandlers] = useDisclosure(false);
   const [editForm, setEditForm] = useState({ name: "", description: "" });
   const [inviteForm, setInviteForm] = useState({
     email: "",
@@ -91,6 +112,11 @@ export default function TeamPage() {
       value: "captain",
       label: "Капитан",
       description: "Может управлять командой и участниками",
+    },
+    {
+      value: "coach",
+      label: "Тренер",
+      description: "Отвечает за тренировки и развитие команды",
     },
     {
       value: "creator",
@@ -144,6 +170,9 @@ export default function TeamPage() {
       member.user_id === user?.id &&
       (member.role === "captain" || member.role === "creator")
   );
+  const isCoach = members?.some(
+    (member: TeamMember) => member.user_id === user?.id && (member.role === 'coach' || member.role === 'captain' || member.role === 'creator')
+  )
 
   const handleEditTeam = async () => {
     if (!teamId) return;
@@ -313,6 +342,7 @@ export default function TeamPage() {
             <Tabs.Tab value="invitations" leftSection={<IconMail size={16} />}>
               Приглашения ({invitations?.length || 0})
             </Tabs.Tab>
+            <Tabs.Tab value="trainings">Тренировки</Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="members" pt="md">
@@ -334,6 +364,11 @@ export default function TeamPage() {
                             {member.role === "captain" && (
                               <Badge color="blue" size="sm">
                                 Капитан
+                              </Badge>
+                            )}
+                            {member.role === "coach" && (
+                              <Badge color="teal" size="sm">
+                                Тренер
                               </Badge>
                             )}
                             {member.role === "creator" && (
@@ -449,6 +484,45 @@ export default function TeamPage() {
               )}
             </Stack>
           </Tabs.Panel>
+
+          <Tabs.Panel value="trainings" pt="md">
+            <Stack gap="md">
+              {(isCoach) && (
+                <Group justify="flex-end">
+                  <Button onClick={createTrainingHandlers.open}>Добавить тренировку</Button>
+                </Group>
+              )}
+
+              {(teamTrainings ?? []).length === 0 && (
+                <Text c="dimmed">Тренировок пока нет</Text>
+              )}
+
+              {(teamTrainings ?? []).map((t) => (
+                <Card key={t.id} withBorder>
+                  <Group justify="space-between" align="flex-start">
+                    <Stack gap={4}>
+                      <Title order={5}>{t.title}</Title>
+                      {t.description && <Text size="sm" c="dimmed">{t.description}</Text>}
+                      <Text size="sm" c="dimmed">Начало: {new Date(t.starts_at).toLocaleString('ru-RU')}</Text>
+                      {t.ends_at && <Text size="sm" c="dimmed">Окончание: {new Date(t.ends_at).toLocaleString('ru-RU')}</Text>}
+                      {(t.lat && t.lng) && (
+                        <Text size="sm" c="dimmed">Координаты: {t.lat?.toFixed(5)}, {t.lng?.toFixed(5)}</Text>
+                      )}
+                    </Stack>
+                    <Group gap="xs">
+                      <Button size="xs" variant="light" onClick={() => navigate(`/training/${t.id}`)}>Открыть</Button>
+                      {isCoach && (
+                        <Button color="red" variant="light" size="xs" onClick={async () => {
+                          await deleteTraining(t.id)
+                          notifications.show({ color: 'gray', message: 'Тренировка удалена' })
+                        }} loading={isDeletingTraining}>Удалить</Button>
+                      )}
+                    </Group>
+                  </Group>
+                </Card>
+              ))}
+            </Stack>
+          </Tabs.Panel>
         </Tabs>
       </Stack>
 
@@ -558,6 +632,139 @@ export default function TeamPage() {
           </Group>
         </Stack>
       </Modal>
+
+      {/* Модальное окно создания тренировки */}
+      <Modal
+        opened={createTrainingOpened}
+        onClose={createTrainingHandlers.close}
+        title="Новая тренировка"
+        size="lg"
+      >
+        <CreateTeamTrainingForm
+          onCreate={async (values) => {
+            if (!teamId || !user) return
+            try {
+              await createTraining({
+                type: 'team',
+                title: values.title,
+                description: values.description || undefined,
+                starts_at: values.starts_at,
+                ends_at: values.ends_at || undefined,
+                lat: values.lat ?? null,
+                lng: values.lng ?? null,
+                team_id: teamId,
+                created_by: user.id,
+              })
+              notifications.show({ color: 'green', message: 'Тренировка создана' })
+              createTrainingHandlers.close()
+            } catch (e: any) {
+              notifications.show({ color: 'red', message: e?.message ?? 'Не удалось создать тренировку' })
+            }
+          }}
+          isSubmitting={isCreatingTraining}
+        />
+      </Modal>
     </Container>
   );
+}
+
+function CreateTeamTrainingForm({ onCreate, isSubmitting }: { onCreate: (values: { title: string; description?: string; starts_at: string; ends_at?: string; lat?: number | null; lng?: number | null; area_points?: [number, number][] | null }) => Promise<void> | void; isSubmitting: boolean }) {
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [startsAt, setStartsAt] = useState<Date | null>(new Date())
+  const [endsAt, setEndsAt] = useState<Date | null>(null)
+  const [point, setPoint] = useState<L.LatLng | null>(null)
+  const [polygon, setPolygon] = useState<L.LatLng[]>([])
+
+  function ClickHandler() {
+    useMapEvents({
+      click(e) {
+        setPoint(e.latlng)
+      },
+      contextmenu(e) {
+        // Right click to add polygon vertex
+        setPolygon((prev) => [...prev, e.latlng])
+      },
+      dblclick() {
+        // Double click to clear polygon
+        setPolygon([])
+      },
+    })
+    return null
+  }
+
+  return (
+    <Stack gap="sm">
+      <Title order={5}>Новая тренировка команды</Title>
+      <TextInput label="Название" value={title} onChange={(e) => setTitle(e.target.value)} required />
+      <Textarea label="Описание" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+      <Group grow>
+        <DateTimePicker 
+          label="Начало" 
+          value={startsAt as any} 
+          onChange={(v) => setStartsAt(v as unknown as Date | null)} 
+          required 
+          popoverProps={{ withinPortal: true, zIndex: 10000 }}
+        />
+        <DateTimePicker 
+          label="Окончание" 
+          value={endsAt as any} 
+          onChange={(v) => setEndsAt(v as unknown as Date | null)} 
+          popoverProps={{ withinPortal: true, zIndex: 10000 }}
+        />
+      </Group>
+      <Stack>
+        <Text size="sm" c="dimmed">Клик — поставить точку тренировки. Правый клик — добавить вершину полигона зоны. Двойной клик — очистить полигон.</Text>
+        <div style={{ height: 280, width: '100%' }}>
+          <MapContainer center={[53.9, 27.5667]} zoom={12} style={{ height: '100%', width: '100%' }}>
+            <MapVisibilityFix />
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <ClickHandler />
+            {point && <Marker position={point} />}
+            {polygon.length >= 2 && <Polygon positions={polygon} pathOptions={{ color: 'teal' }} />}
+          </MapContainer>
+        </div>
+      </Stack>
+      <Group justify="flex-end">
+        <Button disabled={!title.trim() || !startsAt} loading={isSubmitting} onClick={async () => {
+          await onCreate({
+            title: title.trim(),
+            description: description.trim() || undefined,
+            starts_at: startsAt ? startsAt.toISOString() : new Date().toISOString(),
+            ends_at: endsAt ? endsAt.toISOString() : undefined,
+            lat: point ? point.lat : null,
+            lng: point ? point.lng : null,
+            area_points: polygon.length >= 3 ? polygon.map(p => [p.lng, p.lat]) as [number, number][] : null,
+          })
+          setTitle('')
+          setDescription('')
+          setEndsAt(null)
+          setPoint(null)
+          setPolygon([])
+        }}>Создать</Button>
+      </Group>
+    </Stack>
+  )
+}
+
+function MapVisibilityFix() {
+  const map = useMap()
+  // Invalidate on intersection and resize
+  useEffect(() => {
+    const container = map.getContainer()
+    const onShow = () => {
+      setTimeout(() => map.invalidateSize(), 0)
+      setTimeout(() => map.invalidateSize(), 200)
+    }
+    const io = new IntersectionObserver((entries) => {
+      const e = entries[0]
+      if (e.isIntersecting) onShow()
+    }, { threshold: [0, 0.1, 0.5, 1] })
+    io.observe(container)
+    const ro = new ResizeObserver(() => map.invalidateSize())
+    ro.observe(container)
+    onShow()
+    return () => { io.disconnect(); ro.disconnect() }
+  }, [map])
+  return null
 }

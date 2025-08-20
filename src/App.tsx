@@ -1,10 +1,10 @@
-import { AppShell, Group, Burger, UnstyledButton, Button, ActionIcon, useMantineColorScheme, Text, Badge } from '@mantine/core'
+import { AppShell, Group, Burger, Button, ActionIcon, useMantineColorScheme, Text, Badge, Stack, Divider } from '@mantine/core'
 import classes from './App.module.css';
 import { useDisclosure } from '@mantine/hooks';
 import { useAuth } from './features/auth/hooks'
 import { supabase } from './lib/supabaseClient'
 import { IconMoon, IconSun } from '@tabler/icons-react'
-import { Link, Outlet } from 'react-router-dom'
+import { NavLink, Outlet } from 'react-router-dom'
 
 function App() {
   const [opened, { toggle }] = useDisclosure();
@@ -29,19 +29,22 @@ function App() {
             <Text size="lg" fw={700}>FishDvizh</Text>
             <Group ml="xl" gap={8} visibleFrom="sm">
               <Group gap="xs">
-                <Link to="/" className={classes.root}>
-                  Home
-                </Link>
-                <Link to="/map" className={classes.root}>
-                  Map
-                </Link>
-                <Link to="/profile" className={classes.root}>
-                  Profile
-                </Link>
+                <NavLink to="/" className={({ isActive }) => isActive ? `${classes.link} ${classes.linkActive}` : classes.link}>
+                  Главная
+                </NavLink>
+                <NavLink to="/competitions" className={({ isActive }) => isActive ? `${classes.link} ${classes.linkActive}` : classes.link}>
+                  Соревнования
+                </NavLink>
+                <NavLink to="/map" className={({ isActive }) => isActive ? `${classes.link} ${classes.linkActive}` : classes.link}>
+                  Карта
+                </NavLink>
+                <NavLink to="/profile" className={({ isActive }) => isActive ? `${classes.link} ${classes.linkActive}` : classes.link}>
+                  Профиль
+                </NavLink>
                 {user?.user_metadata?.role === 'admin' && (
-                  <Link to="/admin" className={classes.root}>
-                    Admin
-                  </Link>
+                  <NavLink to="/admin" className={({ isActive }) => isActive ? `${classes.link} ${classes.linkActive}` : classes.link}>
+                    Администрирование
+                  </NavLink>
                 )}
               </Group>
               {user ? (
@@ -70,10 +73,37 @@ function App() {
       </AppShell.Header>
 
       <AppShell.Navbar py="md" px={4}>
-        <UnstyledButton className={classes.control}>Home</UnstyledButton>
-        <UnstyledButton className={classes.control}>Blog</UnstyledButton>
-        <UnstyledButton className={classes.control}>Contacts</UnstyledButton>
-        <UnstyledButton className={classes.control}>Support</UnstyledButton>
+        <Stack gap="xs">
+          <NavLink to="/" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
+            Главная
+          </NavLink>
+          <NavLink to="/competitions" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
+            Соревнования
+          </NavLink>
+          <NavLink to="/map" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
+            Карта
+          </NavLink>
+          <NavLink to="/profile" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
+            Профиль
+          </NavLink>
+          {user?.user_metadata?.role === 'admin' && (
+            <NavLink to="/admin" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
+              Администрирование
+            </NavLink>
+          )}
+          <Divider my="sm" />
+          {user ? (
+            <>
+              <Text size="sm" c="dimmed" px="md">{user.email}</Text>
+              <Button variant="light" mx="md" onClick={() => { toggle(); supabase.auth.signOut() }}>Выйти</Button>
+            </>
+          ) : (
+            <Button variant="light" mx="md" component="a" href="/auth" onClick={toggle}>Войти</Button>
+          )}
+          <Button variant="default" mx="md" onClick={() => setColorScheme(dark ? 'light' : 'dark')}>
+            {dark ? 'Светлая тема' : 'Темная тема'}
+          </Button>
+        </Stack>
       </AppShell.Navbar>
 
       <AppShell.Main>
