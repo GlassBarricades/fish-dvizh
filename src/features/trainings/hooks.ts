@@ -65,7 +65,7 @@ export function useCreateCatch() {
 export function useUpdateCatch() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, input, trainingId }: { id: string; input: any; trainingId: string }) => updateCatch(id, input),
+    mutationFn: (args: { id: string; input: any; trainingId: string }) => updateCatch(args.id, args.input),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['training-catches', variables.trainingId] })
     },
@@ -75,7 +75,7 @@ export function useUpdateCatch() {
 export function useDeleteCatch() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, trainingId }: { id: string; trainingId: string }) => deleteCatch(id),
+    mutationFn: (args: { id: string; trainingId: string }) => deleteCatch(args.id),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['training-catches', variables.trainingId] })
     },
@@ -105,7 +105,7 @@ export function useUpdateTraining() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: UpdateTrainingInput }) => updateTraining(id, input),
-    onSuccess: (_, vars) => {
+    onSuccess: () => {
       // Can't easily infer keys; better to broadly invalidate
       qc.invalidateQueries({ queryKey: ['trainings'] })
     },
