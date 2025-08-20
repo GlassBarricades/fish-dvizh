@@ -141,7 +141,7 @@ export function useDeleteTrainingSegment() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id }: { id: string; trainingId: string }) => deleteTrainingSegment(id),
-    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: ['training-segments'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['training-segments'] }),
   })
 }
 
