@@ -28,6 +28,7 @@ const MapPage = lazy(() => import('./pages/MapPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const TeamPage = lazy(() => import('./pages/TeamPage'))
 const TrainingPage = lazy(() => import('./pages/TrainingPage'))
+const OnWaterTrainingPage = lazy(() => import('./pages/OnWaterTrainingPage'))
 const CompetitionPage = lazy(() => import('./pages/CompetitionPage'))
 const AdminPage = lazy(() => import('./pages/AdminPage'))
 const AdminUsersPage = lazy(() => import('./pages/admin/UsersPage'))
@@ -79,6 +80,7 @@ const router = createBrowserRouter([
   { path: '/results/:competitionId', element: <Suspense fallback={null}><ResultsPublicPage /></Suspense> },
   { path: '/judge/:competitionId', element: <Suspense fallback={null}><JudgePage /></Suspense> },
   { path: '/training/:trainingId', element: <Suspense fallback={null}><TrainingPage /></Suspense> },
+  { path: '/training/:trainingId/water', element: <Suspense fallback={null}><OnWaterTrainingPage /></Suspense> },
 ])
 
 const queryClient = new QueryClient()

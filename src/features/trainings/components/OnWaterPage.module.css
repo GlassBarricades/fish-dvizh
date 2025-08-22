@@ -1,0 +1,124 @@
+/* Стили для страницы "На воде" - оптимизация для мобильных устройств */
+
+.onWaterContainer {
+  /* Убираем лишние отступы на мобильных */
+  padding: 0.5rem;
+}
+
+.mainCatchButton {
+  /* Большая кнопка поимки для удобства на воде */
+  height: 80px !important;
+  font-size: 20px !important;
+  font-weight: bold !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.eventButton {
+  /* Кнопки событий */
+  height: 56px !important;
+  font-size: 16px !important;
+  border-radius: 8px !important;
+}
+
+.switchButton {
+  /* Кнопки смены оснастки */
+  height: 48px !important;
+  font-size: 14px !important;
+}
+
+.rigCard {
+  /* Карточка оснастки */
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.actionCard {
+  /* Карточки действий */
+  border-radius: 12px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Адаптация для маленьких экранов */
+@media (max-width: 480px) {
+  .onWaterContainer {
+    padding: 0.25rem;
+  }
+
+  .mainCatchButton {
+    height: 70px !important;
+    font-size: 18px !important;
+  }
+
+  .eventButton {
+    height: 48px !important;
+    font-size: 14px !important;
+  }
+
+  .switchButton {
+    height: 44px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* Адаптация для средних экранов */
+@media (min-width: 481px) and (max-width: 768px) {
+  .onWaterContainer {
+    padding: 0.75rem;
+  }
+}
+
+/* Адаптация для больших экранов */
+@media (min-width: 769px) {
+  .onWaterContainer {
+    padding: 1rem;
+  }
+
+  .mainCatchButton {
+    height: 90px !important;
+    font-size: 22px !important;
+  }
+
+  .eventButton {
+    height: 60px !important;
+    font-size: 18px !important;
+  }
+
+  .switchButton {
+    height: 52px !important;
+    font-size: 16px !important;
+  }
+}
+
+/* Анимации для кнопок */
+.mainCatchButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+  transition: all 0.2s ease;
+}
+
+.eventButton:hover {
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+.switchButton:hover {
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+/* Стили для модальных окон на мобильных */
+@media (max-width: 768px) {
+  .modalContent {
+    padding: 1rem !important;
+  }
+
+  .modalTitle {
+    font-size: 18px !important;
+  }
+
+  .modalButton {
+    height: 44px !important;
+    font-size: 16px !important;
+  }
+}

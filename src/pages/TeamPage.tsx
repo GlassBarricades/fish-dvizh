@@ -64,7 +64,7 @@ import {
 } from "../features/teams/hooks";
 import { useAuth } from "../features/auth/hooks";
 import { notifications } from "@mantine/notifications";
-import { useTeamTrainings, useCreateTraining, useDeleteTraining } from '../features/trainings/hooks'
+import { useTeamTrainings, useCreateTraining, useDeleteTraining, useUpdateTraining } from '../features/trainings/hooks'
 
 export default function TeamPage() {
   const { teamId } = useParams<{ teamId: string }>();
@@ -81,8 +81,9 @@ export default function TeamPage() {
     useTeamInvitations(teamId!);
 
   const { data: teamTrainings } = useTeamTrainings(teamId)
-  const { mutateAsync: createTraining, isPending: isCreatingTraining } = useCreateTraining()
-  const { mutateAsync: deleteTraining, isPending: isDeletingTraining } = useDeleteTraining()
+     const { mutateAsync: createTraining, isPending: isCreatingTraining } = useCreateTraining()
+   const { mutateAsync: updateTraining, isPending: isUpdatingTraining } = useUpdateTraining()
+   const { mutateAsync: deleteTraining, isPending: isDeletingTraining } = useDeleteTraining()
 
   const updateTeam = useUpdateTeam();
   const deleteTeam = useDeleteTeam();
@@ -94,7 +95,10 @@ export default function TeamPage() {
   const [editModalOpened, editModalHandlers] = useDisclosure(false);
   const [deleteModalOpened, deleteModalHandlers] = useDisclosure(false);
   const [inviteModalOpened, inviteModalHandlers] = useDisclosure(false);
-  const [createTrainingOpened, createTrainingHandlers] = useDisclosure(false);
+     const [createTrainingOpened, createTrainingHandlers] = useDisclosure(false);
+   const [editTrainingOpened, editTrainingHandlers] = useDisclosure(false);
+   const [editingTraining, setEditingTraining] = useState<any>(null);
+   const [mapCenter, setMapCenter] = useState<[number, number]>([53.9, 27.5667]);
   const [editForm, setEditForm] = useState({ name: "", description: "" });
   const [inviteForm, setInviteForm] = useState({
     email: "",
@@ -125,14 +129,21 @@ export default function TeamPage() {
     },
   ];
 
-  useEffect(() => {
-    if (team) {
-      setEditForm({
-        name: team.name,
-        description: team.description || "",
-      });
-    }
-  }, [team]);
+     useEffect(() => {
+     if (team) {
+       setEditForm({
+         name: team.name,
+         description: team.description || "",
+       });
+     }
+   }, [team]);
+
+   // Автоматически центрируем карту на точке тренировки при открытии редактирования
+   useEffect(() => {
+     if (editingTraining?.lat && editingTraining?.lng) {
+       setMapCenter([editingTraining.lat, editingTraining.lng])
+     }
+   }, [editingTraining])
 
   if (!teamId) {
     return (
@@ -509,15 +520,27 @@ export default function TeamPage() {
                         <Text size="sm" c="dimmed">Координаты: {t.lat?.toFixed(5)}, {t.lng?.toFixed(5)}</Text>
                       )}
                     </Stack>
-                    <Group gap="xs">
-                      <Button size="xs" variant="light" onClick={() => navigate(`/training/${t.id}`)}>Открыть</Button>
-                      {isCoach && (
-                        <Button color="red" variant="light" size="xs" onClick={async () => {
-                          await deleteTraining(t.id)
-                          notifications.show({ color: 'gray', message: 'Тренировка удалена' })
-                        }} loading={isDeletingTraining}>Удалить</Button>
-                      )}
-                    </Group>
+                                         <Group gap="xs">
+                       <Button size="xs" variant="light" onClick={() => navigate(`/training/${t.id}`)}>Открыть</Button>
+                       {isCoach && (
+                         <>
+                           <Button size="xs" variant="light" onClick={() => {
+                             setEditingTraining(t)
+                             // Устанавливаем центр карты на точку тренировки, если она есть
+                             if (t.lat && t.lng) {
+                               setMapCenter([t.lat, t.lng])
+                             } else {
+                               setMapCenter([53.9, 27.5667]) // Дефолтный центр
+                             }
+                             editTrainingHandlers.open()
+                           }}>Редактировать</Button>
+                           <Button color="red" variant="light" size="xs" onClick={async () => {
+                             await deleteTraining(t.id)
+                             notifications.show({ color: 'gray', message: 'Тренировка удалена' })
+                           }} loading={isDeletingTraining}>Удалить</Button>
+                         </>
+                       )}
+                     </Group>
                   </Group>
                 </Card>
               ))}
@@ -662,16 +685,52 @@ export default function TeamPage() {
             }
           }}
           isSubmitting={isCreatingTraining}
-        />
-      </Modal>
-    </Container>
-  );
-}
+                 />
+       </Modal>
+
+       {/* Модальное окно редактирования тренировки */}
+       <Modal
+         opened={editTrainingOpened}
+         onClose={editTrainingHandlers.close}
+         title="Редактировать тренировку"
+         size="lg"
+       >
+         <EditTeamTrainingForm
+           training={editingTraining}
+           mapCenter={mapCenter}
+           onEdit={async (values: { title: string; description?: string; starts_at: string; ends_at?: string; lat?: number | null; lng?: number | null; area_points?: [number, number][] | null }) => {
+             if (!editingTraining) return
+             try {
+               await updateTraining({
+                 id: editingTraining.id,
+                 input: {
+                   title: values.title,
+                   description: values.description || undefined,
+                   starts_at: values.starts_at,
+                   ends_at: values.ends_at || undefined,
+                   lat: values.lat ?? null,
+                   lng: values.lng ?? null,
+                   area_points: values.area_points ?? null,
+                 }
+               })
+               notifications.show({ color: 'green', message: 'Тренировка обновлена' })
+               editTrainingHandlers.close()
+               setEditingTraining(null)
+             } catch (e: any) {
+               notifications.show({ color: 'red', message: e?.message ?? 'Не удалось обновить тренировку' })
+             }
+           }}
+           isSubmitting={isUpdatingTraining}
+         />
+       </Modal>
+     </Container>
+   );
+ }
 
 function CreateTeamTrainingForm({ onCreate, isSubmitting }: { onCreate: (values: { title: string; description?: string; starts_at: string; ends_at?: string; lat?: number | null; lng?: number | null; area_points?: [number, number][] | null }) => Promise<void> | void; isSubmitting: boolean }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [startsAt, setStartsAt] = useState<Date | null>(new Date())
+     const [startsAt, setStartsAt] = useState<Date>(new Date())
   const [endsAt, setEndsAt] = useState<Date | null>(null)
   const [point, setPoint] = useState<L.LatLng | null>(null)
   const [polygon, setPolygon] = useState<L.LatLng[]>([])
@@ -701,15 +760,29 @@ function CreateTeamTrainingForm({ onCreate, isSubmitting }: { onCreate: (values:
       <Group grow>
         <DateTimePicker 
           label="Начало" 
-          value={startsAt as any} 
-          onChange={(v) => setStartsAt(v as unknown as Date | null)} 
+          value={startsAt} 
+          onChange={(v: Date | string | null) => {
+            if (v instanceof Date) {
+              setStartsAt(v)
+            } else if (typeof v === 'string') {
+              setStartsAt(new Date(v))
+            }
+          }} 
           required 
           popoverProps={{ withinPortal: true, zIndex: 10000 }}
         />
         <DateTimePicker 
           label="Окончание" 
-          value={endsAt as any} 
-          onChange={(v) => setEndsAt(v as unknown as Date | null)} 
+          value={endsAt} 
+          onChange={(v: Date | string | null) => {
+            if (v instanceof Date) {
+              setEndsAt(v)
+            } else if (typeof v === 'string') {
+              setEndsAt(new Date(v))
+            } else {
+              setEndsAt(null)
+            }
+          }} 
           popoverProps={{ withinPortal: true, zIndex: 10000 }}
         />
       </Group>
@@ -726,16 +799,16 @@ function CreateTeamTrainingForm({ onCreate, isSubmitting }: { onCreate: (values:
         </div>
       </Stack>
       <Group justify="flex-end">
-        <Button disabled={!title.trim() || !startsAt} loading={isSubmitting} onClick={async () => {
-          await onCreate({
-            title: title.trim(),
-            description: description.trim() || undefined,
-            starts_at: startsAt ? startsAt.toISOString() : new Date().toISOString(),
-            ends_at: endsAt ? endsAt.toISOString() : undefined,
-            lat: point ? point.lat : null,
-            lng: point ? point.lng : null,
-            area_points: polygon.length >= 3 ? polygon.map(p => [p.lng, p.lat]) as [number, number][] : null,
-          })
+                 <Button disabled={!title.trim() || !startsAt} loading={isSubmitting} onClick={async () => {
+           await onCreate({
+             title: title.trim(),
+             description: description.trim() || undefined,
+             starts_at: startsAt instanceof Date ? startsAt.toISOString() : new Date().toISOString(),
+             ends_at: endsAt instanceof Date ? endsAt.toISOString() : undefined,
+             lat: point ? point.lat : null,
+             lng: point ? point.lng : null,
+             area_points: polygon.length >= 3 ? polygon.map(p => [p.lng, p.lat]) as [number, number][] : null,
+           })
           setTitle('')
           setDescription('')
           setEndsAt(null)
@@ -744,27 +817,165 @@ function CreateTeamTrainingForm({ onCreate, isSubmitting }: { onCreate: (values:
         }}>Создать</Button>
       </Group>
     </Stack>
-  )
-}
+     )
+ }
+ 
+ function EditTeamTrainingForm({ training, mapCenter, onEdit, isSubmitting }: { 
+  training: any; 
+  mapCenter: [number, number];
+  onEdit: (values: { title: string; description?: string; starts_at: string; ends_at?: string; lat?: number | null; lng?: number | null; area_points?: [number, number][] | null }) => Promise<void> | void; 
+  isSubmitting: boolean 
+}) {
+   const [title, setTitle] = useState(training?.title || '')
+   const [description, setDescription] = useState(training?.description || '')
+   const [startsAt, setStartsAt] = useState<Date>(training?.starts_at ? new Date(training.starts_at) : new Date())
+   const [endsAt, setEndsAt] = useState<Date | null>(training?.ends_at ? new Date(training.ends_at) : null)
+   const [point, setPoint] = useState<L.LatLng | null>(training?.lat && training?.lng ? L.latLng(training.lat, training.lng) : null)
+   const [polygon, setPolygon] = useState<L.LatLng[]>(training?.area_geojson?.coordinates?.[0]?.map((coord: [number, number]) => L.latLng(coord[1], coord[0])) || [])
+ 
+   // Обновляем состояние при изменении тренировки
+   useEffect(() => {
+     if (training) {
+       setTitle(training.title || '')
+       setDescription(training.description || '')
+       setStartsAt(training.starts_at ? new Date(training.starts_at) : new Date())
+       setEndsAt(training.ends_at ? new Date(training.ends_at) : null)
+       setPoint(training.lat && training.lng ? L.latLng(training.lat, training.lng) : null)
+       setPolygon(training.area_geojson?.coordinates?.[0]?.map((coord: [number, number]) => L.latLng(coord[1], coord[0])) || [])
+     }
+   }, [training])
 
-function MapVisibilityFix() {
+
+ 
+   function ClickHandler() {
+     useMapEvents({
+       click(e) {
+         setPoint(e.latlng)
+       },
+       contextmenu(e) {
+         // Right click to add polygon vertex
+         setPolygon((prev) => [...prev, e.latlng])
+       },
+       dblclick() {
+         // Double click to clear polygon
+         setPolygon([])
+       },
+     })
+     return null
+   }
+ 
+   return (
+     <Stack gap="sm">
+       <Title order={5}>Редактировать тренировку команды</Title>
+       <TextInput label="Название" value={title} onChange={(e) => setTitle(e.target.value)} required />
+       <Textarea label="Описание" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+       <Group grow>
+         <DateTimePicker 
+           label="Начало" 
+           value={startsAt} 
+           onChange={(v: Date | string | null) => {
+             if (v instanceof Date) {
+               setStartsAt(v)
+             } else if (typeof v === 'string') {
+               setStartsAt(new Date(v))
+             }
+           }} 
+           required 
+           popoverProps={{ withinPortal: true, zIndex: 10000 }}
+         />
+         <DateTimePicker 
+           label="Окончание" 
+           value={endsAt} 
+           onChange={(v: Date | string | null) => {
+             if (v instanceof Date) {
+               setEndsAt(v)
+             } else if (typeof v === 'string') {
+               setEndsAt(new Date(v))
+             } else {
+               setEndsAt(null)
+             }
+           }} 
+           popoverProps={{ withinPortal: true, zIndex: 10000 }}
+         />
+       </Group>
+       <Stack>
+         <Text size="sm" c="dimmed">Клик — поставить точку тренировки. Правый клик — добавить вершину полигона зоны. Двойной клик — очистить полигон.</Text>
+         <div style={{ height: 280, width: '100%' }}>
+           <MapContainer center={mapCenter} zoom={12} style={{ height: '100%', width: '100%' }}>
+             <MapVisibilityFix />
+             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+             <ClickHandler />
+             {point && <Marker position={point} />}
+             {polygon.length >= 2 && <Polygon positions={polygon} pathOptions={{ color: 'teal' }} />}
+           </MapContainer>
+         </div>
+       </Stack>
+       <Group justify="flex-end">
+         <Button disabled={!title.trim() || !startsAt} loading={isSubmitting} onClick={async () => {
+           await onEdit({
+             title: title.trim(),
+             description: description.trim() || undefined,
+             starts_at: startsAt instanceof Date ? startsAt.toISOString() : new Date().toISOString(),
+             ends_at: endsAt instanceof Date ? endsAt.toISOString() : undefined,
+             lat: point ? point.lat : null,
+             lng: point ? point.lng : null,
+             area_points: polygon.length >= 3 ? polygon.map(p => [p.lng, p.lat]) as [number, number][] : null,
+           })
+         }}>Сохранить</Button>
+       </Group>
+     </Stack>
+   )
+ }
+ 
+ function MapVisibilityFix() {
   const map = useMap()
   // Invalidate on intersection and resize
   useEffect(() => {
+    if (!map) return
+    
     const container = map.getContainer()
+    if (!container) return
+    
     const onShow = () => {
-      setTimeout(() => map.invalidateSize(), 0)
-      setTimeout(() => map.invalidateSize(), 200)
+      try {
+        setTimeout(() => {
+          if (map && map.getContainer()) {
+            map.invalidateSize()
+          }
+        }, 0)
+        setTimeout(() => {
+          if (map && map.getContainer()) {
+            map.invalidateSize()
+          }
+        }, 200)
+      } catch (error) {
+        // Ignore errors during map invalidation
+      }
     }
+    
     const io = new IntersectionObserver((entries) => {
       const e = entries[0]
       if (e.isIntersecting) onShow()
     }, { threshold: [0, 0.1, 0.5, 1] })
+    
+    const ro = new ResizeObserver(() => {
+      try {
+        if (map && map.getContainer()) {
+          map.invalidateSize()
+        }
+      } catch (error) {
+        // Ignore errors during map invalidation
+      }
+    })
+    
     io.observe(container)
-    const ro = new ResizeObserver(() => map.invalidateSize())
     ro.observe(container)
     onShow()
-    return () => { io.disconnect(); ro.disconnect() }
+    
+    return () => { 
+      io.disconnect()
+      ro.disconnect() 
+    }
   }, [map])
   return null
 }

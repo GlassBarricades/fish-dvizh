@@ -1,0 +1,315 @@
+/* Адаптивные стили для TrainingHeader */
+
+/* Мобильные устройства */
+@media (max-width: 768px) {
+  .mobileContainer {
+    padding: 12px;
+  }
+  
+  .mobileTitle {
+    font-size: 1.5rem !important;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  
+  .mobileInfoGroup {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .mobileBadge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+  }
+  
+  .mobileButton {
+    min-height: 44px;
+    min-width: 44px;
+    font-size: 0.875rem;
+    border-radius: 8px;
+  }
+  
+  .mobileButtonGroup {
+    gap: 8px;
+  }
+  
+  .mobileQuickActions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .mobileQuickButton {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .mobileNavigation {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+  
+  .mobilePrimaryActions {
+    margin-bottom: 12px;
+  }
+  
+  .mobileSecondaryActions {
+    margin-bottom: 12px;
+  }
+  
+  .mobileBackButton {
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 1px solid #dee2e6;
+    color: #495057;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+  }
+  
+  .mobileBackButton:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .mobileBackButton:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .mobileFullWidthButton {
+    width: 100%;
+    height: 48px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    transition: all 0.2s ease;
+  }
+  
+  .mobileFullWidthButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
+  }
+}
+
+/* Планшеты */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .tabletContainer {
+    padding: 16px;
+  }
+  
+  .tabletTitle {
+    font-size: 1.75rem !important;
+  }
+  
+  .tabletButton {
+    min-height: 40px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Десктоп */
+@media (min-width: 1025px) {
+  .desktopContainer {
+    padding: 24px;
+  }
+  
+  .desktopTitle {
+    font-size: 2rem !important;
+  }
+  
+  .desktopButton {
+    min-height: 36px;
+    font-size: 0.875rem;
+  }
+  
+  .desktopBackButton {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 1px solid #dee2e6;
+    color: #495057;
+    transition: all 0.2s ease;
+    font-weight: 500;
+  }
+  
+  .desktopBackButton:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .desktopBackButton:active {
+    transform: translateY(0);
+  }
+}
+
+/* Общие адаптивные стили */
+.responsiveGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.responsiveStack {
+  width: 100%;
+}
+
+.responsiveText {
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* Заголовок с кнопкой "Назад" */
+.titleWithBack {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.titleWithBack .title {
+  flex: 1;
+  margin: 0;
+}
+
+.titleWithBack .backButton {
+  flex-shrink: 0;
+}
+
+/* Touch-friendly стили для мобильных */
+@media (max-width: 768px) {
+  .touchFriendly {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .touchFriendly:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  .touchFriendly:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+  }
+}
+
+/* Анимации для мобильных */
+@media (max-width: 768px) {
+  .mobileFadeIn {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  .mobileSlideUp {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .mobileScaleIn {
+    animation: scaleIn 0.2s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Оптимизация для медленных соединений */
+@media (max-width: 768px) {
+  .lowBandwidth {
+    background-image: none;
+    box-shadow: none;
+  }
+  
+  .lowBandwidth .mobileQuickButton {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+  }
+}
+
+/* Высокий DPI экраны */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .highDpi {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Темная тема для мобильных */
+@media (max-width: 768px) and (prefers-color-scheme: dark) {
+  .mobileNavigation {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    color: #e2e8f0;
+  }
+  
+  .mobileQuickButton {
+    background: #4a5568;
+    border-color: #718096;
+    color: #e2e8f0;
+  }
+  
+  .mobileBackButton {
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+    border-color: #718096;
+    color: #e2e8f0;
+  }
+  
+  .mobileBackButton:hover {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+  }
+}
+
+/* Темная тема для десктопа */
+@media (min-width: 1025px) and (prefers-color-scheme: dark) {
+  .desktopBackButton {
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+    border-color: #718096;
+    color: #e2e8f0;
+  }
+  
+  .desktopBackButton:hover {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+  }
+}

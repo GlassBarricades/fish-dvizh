@@ -1,5 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createCatch, createTraining, deleteCatch, deleteTraining, fetchTeamTrainings, fetchTrainingById, fetchUserTrainings, listTrainingCatches, listTrainingTakenBaits, setTrainingTakenBaits, updateCatch, updateTraining, fetchTrainingPlan, upsertTrainingPlan, listTrainingSegments, createTrainingSegment, deleteTrainingSegment, listTrainingTasks, createTrainingTask, updateTrainingTask, deleteTrainingTask } from './api'
+import { createCatch, createTraining, deleteCatch, deleteTraining, fetchTeamTrainings, fetchTrainingById, fetchUserTrainings, listTrainingCatches, listTrainingTakenBaits, setTrainingTakenBaits, updateCatch, updateTraining, fetchTrainingPlan, upsertTrainingPlan, listTrainingSegments, createTrainingSegment, deleteTrainingSegment, listTrainingTasks, createTrainingTask, updateTrainingTask, deleteTrainingTask, listTrainingTakenUserBaits, setTrainingTakenUserBaits, listUserCatches, listCatchesByUsers, listTrainingEvents, createTrainingEvent, deleteTrainingEvent, updateTrainingEvent } from './api'
+
+// Экспортируем новые оптимизированные хуки
+export { useTrainingData, usePrefetchTrainingData, useOptimisticTrainingUpdates } from './hooks/useTrainingData'
+export { useSmartNotifications } from './hooks/useSmartNotifications'
 import type { CreateTrainingInput, UpdateTrainingInput } from './types'
 
 export function useUserTrainings(userId: string | undefined) {
@@ -34,6 +38,22 @@ export function useTrainingCatches(trainingId: string | undefined) {
   })
 }
 
+export function useUserCatches(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['user-catches', userId],
+    queryFn: () => listUserCatches(userId as string),
+    enabled: !!userId,
+  })
+}
+
+export function useCatchesByUsers(userIds: string[] | undefined) {
+  return useQuery({
+    queryKey: ['catches-by-users', (userIds || []).join(',')],
+    queryFn: () => listCatchesByUsers(userIds as string[]),
+    enabled: !!userIds && userIds.length > 0,
+  })
+}
+
 export function useTrainingTakenBaits(trainingId: string | undefined, userId: string | undefined) {
   return useQuery({
     queryKey: ['training-taken-baits', trainingId, userId],
@@ -48,6 +68,25 @@ export function useSetTrainingTakenBaits() {
     mutationFn: ({ trainingId, userId, baitIds }: { trainingId: string; userId: string; baitIds: string[] }) => setTrainingTakenBaits(trainingId, userId, baitIds),
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: ['training-taken-baits', vars.trainingId, vars.userId] })
+    },
+  })
+}
+
+// New hooks for user_baits based taken set
+export function useTrainingTakenUserBaits(trainingId: string | undefined, userId: string | undefined) {
+  return useQuery({
+    queryKey: ['training-taken-user-baits', trainingId, userId],
+    queryFn: () => listTrainingTakenUserBaits(trainingId as string, userId as string),
+    enabled: !!trainingId && !!userId,
+  })
+}
+
+export function useSetTrainingTakenUserBaits() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ trainingId, userId, userBaitIds }: { trainingId: string; userId: string; userBaitIds: string[] }) => setTrainingTakenUserBaits(trainingId, userId, userBaitIds),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ['training-taken-user-baits', vars.trainingId, vars.userId] })
     },
   })
 }
@@ -196,6 +235,46 @@ export function useDeleteTraining() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['trainings'] })
     },
+  })
+}
+
+// Events
+export function useTrainingEvents(trainingId: string | undefined) {
+  return useQuery({
+    queryKey: ['training-events', trainingId],
+    queryFn: () => listTrainingEvents(trainingId as string),
+    enabled: !!trainingId,
+  })
+}
+
+export function useCreateTrainingEvent() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: createTrainingEvent,
+    onSuccess: (ev) => qc.invalidateQueries({ queryKey: ['training-events', ev.training_id] }),
+  })
+}
+
+export function useDeleteTrainingEvent() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id }: { id: string; trainingId: string }) => deleteTrainingEvent(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['training-events'] }),
+  })
+}
+
+export function useUpdateTrainingEvent() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: {
+      kind: 'strike' | 'lost' | 'snag'
+      bait_id?: string | null
+      notes?: string | null
+      at: string
+      lat?: number | null
+      lng?: number | null
+    } }) => updateTrainingEvent(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['training-events'] }),
   })
 }
 
