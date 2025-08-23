@@ -19,6 +19,7 @@ import {
   Alert,
   Paper,
   Box,
+  MultiSelect,
 } from "@mantine/core";
 import { DateTimePicker } from '@mantine/dates'
 import { MapContainer, TileLayer, Marker, Polygon, useMap, useMapEvents } from 'react-leaflet'
@@ -65,6 +66,7 @@ import {
 import { useAuth } from "../features/auth/hooks";
 import { notifications } from "@mantine/notifications";
 import { useTeamTrainings, useCreateTraining, useDeleteTraining, useUpdateTraining } from '../features/trainings/hooks'
+import { useFishKinds } from '../features/dicts/fish/hooks'
 
 export default function TeamPage() {
   const { teamId } = useParams<{ teamId: string }>();
@@ -675,6 +677,7 @@ export default function TeamPage() {
                 ends_at: values.ends_at || undefined,
                 lat: values.lat ?? null,
                 lng: values.lng ?? null,
+                target_fish_kinds: values.target_fish_kinds || null,
                 team_id: teamId,
                 created_by: user.id,
               })
@@ -685,7 +688,7 @@ export default function TeamPage() {
             }
           }}
           isSubmitting={isCreatingTraining}
-                 />
+        />
        </Modal>
 
        {/* Модальное окно редактирования тренировки */}
@@ -698,21 +701,22 @@ export default function TeamPage() {
          <EditTeamTrainingForm
            training={editingTraining}
            mapCenter={mapCenter}
-           onEdit={async (values: { title: string; description?: string; starts_at: string; ends_at?: string; lat?: number | null; lng?: number | null; area_points?: [number, number][] | null }) => {
-             if (!editingTraining) return
-             try {
-               await updateTraining({
-                 id: editingTraining.id,
-                 input: {
-                   title: values.title,
-                   description: values.description || undefined,
-                   starts_at: values.starts_at,
-                   ends_at: values.ends_at || undefined,
-                   lat: values.lat ?? null,
-                   lng: values.lng ?? null,
-                   area_points: values.area_points ?? null,
-                 }
-               })
+                     onEdit={async (values: { title: string; description?: string; starts_at: string; ends_at?: string; lat?: number | null; lng?: number | null; area_points?: [number, number][] | null; target_fish_kinds?: string[] | null }) => {
+            if (!editingTraining) return
+            try {
+              await updateTraining({
+                id: editingTraining.id,
+                input: {
+                  title: values.title,
+                  description: values.description || undefined,
+                  starts_at: values.starts_at,
+                  ends_at: values.ends_at || undefined,
+                  lat: values.lat ?? null,
+                  lng: values.lng ?? null,
+                  area_points: values.area_points ?? null,
+                  target_fish_kinds: values.target_fish_kinds ?? null,
+                }
+              })
                notifications.show({ color: 'green', message: 'Тренировка обновлена' })
                editTrainingHandlers.close()
                setEditingTraining(null)
@@ -727,13 +731,17 @@ export default function TeamPage() {
    );
  }
 
-function CreateTeamTrainingForm({ onCreate, isSubmitting }: { onCreate: (values: { title: string; description?: string; starts_at: string; ends_at?: string; lat?: number | null; lng?: number | null; area_points?: [number, number][] | null }) => Promise<void> | void; isSubmitting: boolean }) {
+function CreateTeamTrainingForm({ onCreate, isSubmitting }: { onCreate: (values: { title: string; description?: string; starts_at: string; ends_at?: string; lat?: number | null; lng?: number | null; area_points?: [number, number][] | null; target_fish_kinds?: string[] | null }) => Promise<void> | void; isSubmitting: boolean }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-     const [startsAt, setStartsAt] = useState<Date>(new Date())
+  const [startsAt, setStartsAt] = useState<Date>(new Date())
   const [endsAt, setEndsAt] = useState<Date | null>(null)
   const [point, setPoint] = useState<L.LatLng | null>(null)
   const [polygon, setPolygon] = useState<L.LatLng[]>([])
+  const [targetFishKinds, setTargetFishKinds] = useState<string[]>([])
+  
+  // Получаем список видов рыбы
+  const { data: fishKinds } = useFishKinds()
 
   function ClickHandler() {
     useMapEvents({
@@ -757,6 +765,19 @@ function CreateTeamTrainingForm({ onCreate, isSubmitting }: { onCreate: (values:
       <Title order={5}>Новая тренировка команды</Title>
       <TextInput label="Название" value={title} onChange={(e) => setTitle(e.target.value)} required />
       <Textarea label="Описание" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+      
+      {/* Выбор целевой рыбы */}
+      <MultiSelect
+        label="Целевая рыба"
+        placeholder="Выберите виды рыбы для тренировки"
+        data={fishKinds?.map(fish => ({ value: fish.id, label: fish.name })) || []}
+        value={targetFishKinds}
+        onChange={setTargetFishKinds}
+        searchable
+        clearable
+        description="Можно выбрать несколько видов рыбы. Участники смогут выбирать из этого списка при создании поимок."
+      />
+      
       <Group grow>
         <DateTimePicker 
           label="Начало" 
@@ -800,20 +821,22 @@ function CreateTeamTrainingForm({ onCreate, isSubmitting }: { onCreate: (values:
       </Stack>
       <Group justify="flex-end">
                  <Button disabled={!title.trim() || !startsAt} loading={isSubmitting} onClick={async () => {
-           await onCreate({
-             title: title.trim(),
-             description: description.trim() || undefined,
-             starts_at: startsAt instanceof Date ? startsAt.toISOString() : new Date().toISOString(),
-             ends_at: endsAt instanceof Date ? endsAt.toISOString() : undefined,
-             lat: point ? point.lat : null,
-             lng: point ? point.lng : null,
-             area_points: polygon.length >= 3 ? polygon.map(p => [p.lng, p.lat]) as [number, number][] : null,
-           })
+          await onCreate({
+            title: title.trim(),
+            description: description.trim() || undefined,
+            starts_at: startsAt instanceof Date ? startsAt.toISOString() : new Date().toISOString(),
+            ends_at: endsAt instanceof Date ? endsAt.toISOString() : undefined,
+            lat: point ? point.lat : null,
+            lng: point ? point.lng : null,
+            area_points: polygon.length >= 3 ? polygon.map(p => [p.lng, p.lat]) as [number, number][] : null,
+            target_fish_kinds: targetFishKinds.length > 0 ? targetFishKinds : null,
+          })
           setTitle('')
           setDescription('')
           setEndsAt(null)
           setPoint(null)
           setPolygon([])
+          setTargetFishKinds([])
         }}>Создать</Button>
       </Group>
     </Stack>
@@ -821,29 +844,34 @@ function CreateTeamTrainingForm({ onCreate, isSubmitting }: { onCreate: (values:
  }
  
  function EditTeamTrainingForm({ training, mapCenter, onEdit, isSubmitting }: { 
-  training: any; 
-  mapCenter: [number, number];
-  onEdit: (values: { title: string; description?: string; starts_at: string; ends_at?: string; lat?: number | null; lng?: number | null; area_points?: [number, number][] | null }) => Promise<void> | void; 
-  isSubmitting: boolean 
+ training: any; 
+ mapCenter: [number, number];
+ onEdit: (values: { title: string; description?: string; starts_at: string; ends_at?: string; lat?: number | null; lng?: number | null; area_points?: [number, number][] | null; target_fish_kinds?: string[] | null }) => Promise<void> | void; 
+ isSubmitting: boolean 
 }) {
-   const [title, setTitle] = useState(training?.title || '')
-   const [description, setDescription] = useState(training?.description || '')
-   const [startsAt, setStartsAt] = useState<Date>(training?.starts_at ? new Date(training.starts_at) : new Date())
-   const [endsAt, setEndsAt] = useState<Date | null>(training?.ends_at ? new Date(training.ends_at) : null)
-   const [point, setPoint] = useState<L.LatLng | null>(training?.lat && training?.lng ? L.latLng(training.lat, training.lng) : null)
-   const [polygon, setPolygon] = useState<L.LatLng[]>(training?.area_geojson?.coordinates?.[0]?.map((coord: [number, number]) => L.latLng(coord[1], coord[0])) || [])
+  const [title, setTitle] = useState(training?.title || '')
+  const [description, setDescription] = useState(training?.description || '')
+  const [startsAt, setStartsAt] = useState<Date>(training?.starts_at ? new Date(training.starts_at) : new Date())
+  const [endsAt, setEndsAt] = useState<Date | null>(training?.ends_at ? new Date(training.ends_at) : null)
+  const [point, setPoint] = useState<L.LatLng | null>(training?.lat && training?.lng ? L.latLng(training.lat, training.lng) : null)
+  const [polygon, setPolygon] = useState<L.LatLng[]>(training?.area_geojson?.coordinates?.[0]?.map((coord: [number, number]) => L.latLng(coord[1], coord[0])) || [])
+  const [targetFishKinds, setTargetFishKinds] = useState<string[]>(training?.target_fish_kinds || [])
+  
+  // Получаем список видов рыбы
+  const { data: fishKinds } = useFishKinds()
  
-   // Обновляем состояние при изменении тренировки
-   useEffect(() => {
-     if (training) {
-       setTitle(training.title || '')
-       setDescription(training.description || '')
-       setStartsAt(training.starts_at ? new Date(training.starts_at) : new Date())
-       setEndsAt(training.ends_at ? new Date(training.ends_at) : null)
-       setPoint(training.lat && training.lng ? L.latLng(training.lat, training.lng) : null)
-       setPolygon(training.area_geojson?.coordinates?.[0]?.map((coord: [number, number]) => L.latLng(coord[1], coord[0])) || [])
-     }
-   }, [training])
+     // Обновляем состояние при изменении тренировки
+  useEffect(() => {
+    if (training) {
+      setTitle(training.title || '')
+      setDescription(training.description || '')
+      setStartsAt(training.starts_at ? new Date(training.starts_at) : new Date())
+      setEndsAt(training.ends_at ? new Date(training.ends_at) : null)
+      setPoint(training.lat && training.lng ? L.latLng(training.lat, training.lng) : null)
+      setPolygon(training.area_geojson?.coordinates?.[0]?.map((coord: [number, number]) => L.latLng(coord[1], coord[0])) || [])
+      setTargetFishKinds(training.target_fish_kinds || [])
+    }
+  }, [training])
 
 
  
@@ -864,11 +892,23 @@ function CreateTeamTrainingForm({ onCreate, isSubmitting }: { onCreate: (values:
      return null
    }
  
-   return (
-     <Stack gap="sm">
-       <Title order={5}>Редактировать тренировку команды</Title>
-       <TextInput label="Название" value={title} onChange={(e) => setTitle(e.target.value)} required />
-       <Textarea label="Описание" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+     return (
+    <Stack gap="sm">
+      <Title order={5}>Редактировать тренировку команды</Title>
+      <TextInput label="Название" value={title} onChange={(e) => setTitle(e.target.value)} required />
+      <Textarea label="Описание" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+      
+      {/* Выбор целевой рыбы */}
+      <MultiSelect
+        label="Целевая рыба"
+        placeholder="Выберите виды рыбы для тренировки"
+        data={fishKinds?.map(fish => ({ value: fish.id, label: fish.name })) || []}
+        value={targetFishKinds}
+        onChange={setTargetFishKinds}
+        searchable
+        clearable
+        description="Можно выбрать несколько видов рыбы. Участники смогут выбирать из этого списка при создании поимок."
+      />
        <Group grow>
          <DateTimePicker 
            label="Начало" 
@@ -919,9 +959,10 @@ function CreateTeamTrainingForm({ onCreate, isSubmitting }: { onCreate: (values:
              ends_at: endsAt instanceof Date ? endsAt.toISOString() : undefined,
              lat: point ? point.lat : null,
              lng: point ? point.lng : null,
-             area_points: polygon.length >= 3 ? polygon.map(p => [p.lng, p.lat]) as [number, number][] : null,
-           })
-         }}>Сохранить</Button>
+                         area_points: polygon.length >= 3 ? polygon.map(p => [p.lng, p.lat]) as [number, number][] : null,
+            target_fish_kinds: targetFishKinds.length > 0 ? targetFishKinds : null,
+          })
+        }}>Сохранить</Button>
        </Group>
      </Stack>
    )

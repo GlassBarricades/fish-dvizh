@@ -5,6 +5,7 @@ import { memo } from 'react'
 import { useMediaQuery } from '@mantine/hooks'
 import { IconArrowLeft } from '@tabler/icons-react'
 import { CurrentRigIndicator } from './CurrentRigIndicator'
+import { CurrentTargetFishSelector } from './CurrentTargetFishSelector'
 import type { Training } from '../types'
 import type { TrainingTakenUserBait } from '../api'
 import styles from './TrainingHeader.module.css'
@@ -351,6 +352,7 @@ export const TrainingHeader = memo(function TrainingHeader({
         </Group>
         
         {currentRig && <CurrentRigIndicator currentRig={currentRig} />}
+        <CurrentTargetFishSelector />
       </Stack>
       
       {/* Навигация */}

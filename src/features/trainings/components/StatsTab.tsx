@@ -10,6 +10,7 @@ interface StatsTabProps {
   filterFish?: string
   filterUser?: string
   filterBait: string
+  targetFishKinds?: string[] | null
 }
 
 export function StatsTab({
@@ -19,7 +20,8 @@ export function StatsTab({
   takenBaits,
   filterFish,
   filterUser,
-  filterBait
+  filterBait,
+  targetFishKinds
 }: StatsTabProps) {
   
   // Отладочная информация
@@ -132,6 +134,24 @@ export function StatsTab({
   const lost = eventTypes['lost']?.count || 0
   const effectiveness = strikes > 0 ? ((strikes / (strikes + lost)) * 100).toFixed(1) : '0.0'
 
+  // Анализ по целевой рыбе
+  const targetFishAnalysis = targetFishKinds ? (() => {
+    const targetFishIds = new Set(targetFishKinds)
+    const targetCatches = filtered.filter(c => c.fish_kind_id && targetFishIds.has(c.fish_kind_id))
+    const targetEvents = events.filter(() => {
+      // Для событий анализируем по приманке, так как рыба не указана
+      return true // Пока анализируем все события
+    })
+    
+    return {
+      targetCatchesCount: targetCatches.length,
+      targetCatchesWeight: targetCatches.reduce((s, c) => s + (c.weight_g || 0), 0),
+      targetEventsCount: targetEvents.length,
+      totalActivity: targetCatches.length + targetEvents.length,
+      targetFishPercentage: filtered.length > 0 ? ((targetCatches.length / filtered.length) * 100).toFixed(1) : '0.0'
+    }
+  })() : null
+
   // По участникам для событий
   const eventsByUser: Record<string, { label: string; count: number }> = {}
   for (const event of events) {
@@ -225,6 +245,22 @@ export function StatsTab({
             <Text size="xs" c="dimmed">Поклёвки/Сходы</Text>
           </Stack>
         </Card>
+        
+        {/* Статистика по целевой рыбе */}
+        {targetFishAnalysis && (
+          <Card withBorder p="md" bg="blue.0">
+            <Stack gap={4}>
+              <Text size="sm" c="blue">🎯 Целевая рыба</Text>
+              <Title order={3} c="blue">{targetFishAnalysis.targetCatchesCount}</Title>
+                              <Text size="xs" c="blue">
+                {targetFishAnalysis.targetCatchesWeight > 0 
+                  ? `${(targetFishAnalysis.targetCatchesWeight/1000).toFixed(2)} кг • ${targetFishAnalysis.targetFishPercentage}% от всех поимок`
+                  : `${targetFishAnalysis.targetFishPercentage}% от всех поимок`
+                }
+              </Text>
+            </Stack>
+          </Card>
+        )}
       </Group>
 
       <Card withBorder p="md">

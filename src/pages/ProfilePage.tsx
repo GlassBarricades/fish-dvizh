@@ -13,7 +13,8 @@ import {
   TextInput,
   Textarea,
   Card,
-  Select
+  Select,
+  MultiSelect
 } from '@mantine/core'
 import { DateTimePicker } from '@mantine/dates'
 import { MapContainer, TileLayer, Marker, Polygon, useMap, useMapEvents } from 'react-leaflet'
@@ -37,9 +38,10 @@ import { useUserTeams, useCreateTeam, useDeleteTeam, useCreateTeamInvitation, us
 import type { Team } from '../features/teams/types'
 import { useNavigate } from 'react-router-dom'
 import { useUserJudgeInvitations, useRespondJudgeInvitation } from '../features/judges/hooks'
-import { useUserTrainings, useCreateTraining, useDeleteTraining, useUserCatches, useCatchesByUsers } from '../features/trainings/hooks'
+import { useUserTrainings, useCreateTraining, useDeleteTraining, useUpdateTraining, useUserCatches, useCatchesByUsers } from '../features/trainings/hooks'
 import { useBaits } from '../features/dicts/baits/hooks'
 import { useUserBaits, useAddUserBaitFromDict, useAddCustomUserBait, useDeleteUserBait } from '../features/userBaits/hooks'
+import { useFishKinds } from '../features/dicts/fish/hooks'
 
 export default function ProfilePage() {
   const { user } = useAuth()
@@ -47,6 +49,7 @@ export default function ProfilePage() {
   const { data: userCatches } = useUserCatches(user?.id)
   const { mutateAsync: createTraining, isPending: isCreatingTraining } = useCreateTraining()
   const { mutateAsync: deleteTraining, isPending: isDeletingTraining } = useDeleteTraining()
+  const { mutateAsync: updateTraining, isPending: isUpdatingTraining } = useUpdateTraining()
   const { data: userTeams, isLoading: teamsLoading } = useUserTeams(user?.id || '')
   const { data: userInvitations, isLoading: invitationsLoading } = useUserInvitations(user?.id || '')
   const { mutateAsync: deleteTeam } = useDeleteTeam()
@@ -65,7 +68,9 @@ export default function ProfilePage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isEditTrainingModalOpen, setIsEditTrainingModalOpen] = useState(false)
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
+  const [editingTraining, setEditingTraining] = useState<any>(null)
 
   const navigate = useNavigate()
 
@@ -123,6 +128,30 @@ export default function ProfilePage() {
       })
     } catch (e: any) {
       notifications.show({ color: 'red', message: e?.message ?? 'Ошибка обработки приглашения' })
+    }
+  }
+
+  const handleEditTraining = async (values: { title: string; description?: string; starts_at: string; ends_at?: string; lat?: number | null; lng?: number | null; area_points?: [number, number][] | null; target_fish_kinds?: string[] | null }) => {
+    if (!editingTraining) return
+    try {
+      await updateTraining({
+        id: editingTraining.id,
+        input: {
+          title: values.title,
+          description: values.description || undefined,
+          starts_at: values.starts_at,
+          ends_at: values.ends_at || undefined,
+          lat: values.lat ?? null,
+          lng: values.lng ?? null,
+          area_points: values.area_points ?? null,
+          target_fish_kinds: values.target_fish_kinds ?? null,
+        }
+      })
+      notifications.show({ color: 'green', message: 'Тренировка обновлена' })
+      setIsEditTrainingModalOpen(false)
+      setEditingTraining(null)
+    } catch (e: any) {
+      notifications.show({ color: 'red', message: e?.message ?? 'Не удалось обновить тренировку' })
     }
   }
 
@@ -347,6 +376,7 @@ export default function ProfilePage() {
                           ends_at: values.ends_at || undefined,
                           lat: values.lat ?? null,
                           lng: values.lng ?? null,
+                          target_fish_kinds: values.target_fish_kinds || null,
                           user_id: user.id,
                           created_by: user.id,
                         })
@@ -376,6 +406,10 @@ export default function ProfilePage() {
                       </Stack>
                       <Group gap="xs">
                         <Button size="xs" variant="light" onClick={() => navigate(`/training/${t.id}`)}>Открыть</Button>
+                        <Button size="xs" variant="light" color="blue" onClick={() => {
+                          setEditingTraining(t)
+                          setIsEditTrainingModalOpen(true)
+                        }}>Редактировать</Button>
                         <Button color="red" variant="light" size="xs" onClick={async () => {
                           await deleteTraining(t.id)
                           notifications.show({ color: 'gray', message: 'Тренировка удалена' })
@@ -462,6 +496,25 @@ export default function ProfilePage() {
             }
           }}>Удалить</Button>
         </Group>
+      </Modal>
+
+      {/* Edit Training Modal */}
+      <Modal 
+        opened={isEditTrainingModalOpen} 
+        onClose={() => {
+          setIsEditTrainingModalOpen(false)
+          setEditingTraining(null)
+        }} 
+        title="Редактировать тренировку"
+        size="lg"
+      >
+        {editingTraining && (
+          <EditSoloTrainingForm
+            training={editingTraining}
+            onEdit={handleEditTraining}
+            isSubmitting={isUpdatingTraining}
+          />
+        )}
       </Modal>
     </Container>
   )
@@ -741,13 +794,17 @@ function CreateTeamForm({ onSubmit, isSubmitting }: {
   )
 }
 
-function CreateSoloTrainingForm({ onCreate, isSubmitting }: { onCreate: (values: { title: string; description?: string; starts_at: string; ends_at?: string; lat?: number | null; lng?: number | null; area_points?: [number, number][] | null }) => Promise<void> | void; isSubmitting: boolean }) {
+function CreateSoloTrainingForm({ onCreate, isSubmitting }: { onCreate: (values: { title: string; description?: string; starts_at: string; ends_at?: string; lat?: number | null; lng?: number | null; area_points?: [number, number][] | null; target_fish_kinds?: string[] | null }) => Promise<void> | void; isSubmitting: boolean }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [startsAt, setStartsAt] = useState<Date | null>(new Date())
   const [endsAt, setEndsAt] = useState<Date | null>(null)
   const [point, setPoint] = useState<L.LatLng | null>(null)
   const [polygon, setPolygon] = useState<L.LatLng[]>([])
+  const [targetFishKinds, setTargetFishKinds] = useState<string[]>([])
+  
+  // Получаем список видов рыбы
+  const { data: fishKinds } = useFishKinds()
 
   function ClickHandler() {
     useMapEvents({
@@ -769,6 +826,19 @@ function CreateSoloTrainingForm({ onCreate, isSubmitting }: { onCreate: (values:
       <Title order={5}>Новая личная тренировка</Title>
       <TextInput label="Название" value={title} onChange={(e) => setTitle(e.target.value)} required />
       <Textarea label="Описание" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+      
+      {/* Выбор целевой рыбы */}
+      <MultiSelect
+        label="Целевая рыба"
+        placeholder="Выберите виды рыбы для тренировки"
+        data={fishKinds?.map(fish => ({ value: fish.id, label: fish.name })) || []}
+        value={targetFishKinds}
+        onChange={setTargetFishKinds}
+        searchable
+        clearable
+        description="Можно выбрать несколько видов рыбы. Участники смогут выбирать из этого списка при создании поимок."
+      />
+      
       <Group grow>
         <DateTimePicker 
           label="Начало" 
@@ -822,13 +892,136 @@ function CreateSoloTrainingForm({ onCreate, isSubmitting }: { onCreate: (values:
             lat: point ? point.lat : null,
             lng: point ? point.lng : null,
             area_points: polygon.length >= 3 ? polygon.map(p => [p.lng, p.lat]) as [number, number][] : null,
+            target_fish_kinds: targetFishKinds.length > 0 ? targetFishKinds : null,
           })
           setTitle('')
           setDescription('')
           setEndsAt(null)
           setPoint(null)
           setPolygon([])
+          setTargetFishKinds([])
         }}>Создать</Button>
+      </Group>
+    </Stack>
+  )
+}
+
+function EditSoloTrainingForm({ training, onEdit, isSubmitting }: { 
+  training: any; 
+  onEdit: (values: { title: string; description?: string; starts_at: string; ends_at?: string; lat?: number | null; lng?: number | null; area_points?: [number, number][] | null; target_fish_kinds?: string[] | null }) => Promise<void> | void; 
+  isSubmitting: boolean 
+}) {
+  const [title, setTitle] = useState(training?.title || '')
+  const [description, setDescription] = useState(training?.description || '')
+  const [startsAt, setStartsAt] = useState<Date>(training?.starts_at ? new Date(training.starts_at) : new Date())
+  const [endsAt, setEndsAt] = useState<Date | null>(training?.ends_at ? new Date(training.ends_at) : null)
+  const [point, setPoint] = useState<L.LatLng | null>(training?.lat && training?.lng ? L.latLng(training.lat, training.lng) : null)
+  const [polygon, setPolygon] = useState<L.LatLng[]>(training?.area_geojson?.coordinates?.[0]?.map((coord: [number, number]) => L.latLng(coord[1], coord[0])) || [])
+  const [targetFishKinds, setTargetFishKinds] = useState<string[]>(training?.target_fish_kinds || [])
+  
+  // Получаем список видов рыбы
+  const { data: fishKinds } = useFishKinds()
+
+  // Обновляем состояние при изменении тренировки
+  useEffect(() => {
+    if (training) {
+      setTitle(training.title || '')
+      setDescription(training.description || '')
+      setStartsAt(training.starts_at ? new Date(training.starts_at) : new Date())
+      setEndsAt(training.ends_at ? new Date(training.ends_at) : null)
+      setPoint(training.lat && training.lng ? L.latLng(training.lat, training.lng) : null)
+      setPolygon(training.area_geojson?.coordinates?.[0]?.map((coord: [number, number]) => L.latLng(coord[1], coord[0])) || [])
+      setTargetFishKinds(training.target_fish_kinds || [])
+    }
+  }, [training])
+
+  function ClickHandler() {
+    useMapEvents({
+      click(e) {
+        setPoint(e.latlng)
+      },
+      contextmenu(e) {
+        setPolygon((prev) => [...prev, e.latlng])
+      },
+      dblclick() {
+        setPolygon([])
+      },
+    })
+    return null
+  }
+
+  return (
+    <Stack gap="sm">
+      <Title order={5}>Редактировать личную тренировку</Title>
+      <TextInput label="Название" value={title} onChange={(e) => setTitle(e.target.value)} required />
+      <Textarea label="Описание" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+      
+      {/* Выбор целевой рыбы */}
+      <MultiSelect
+        label="Целевая рыба"
+        placeholder="Выберите виды рыбы для тренировки"
+        data={fishKinds?.map(fish => ({ value: fish.id, label: fish.name })) || []}
+        value={targetFishKinds}
+        onChange={setTargetFishKinds}
+        searchable
+        clearable
+        description="Можно выбрать несколько видов рыбы. Участники смогут выбирать из этого списка при создании поимок."
+      />
+      
+      <Group grow>
+        <DateTimePicker 
+          label="Начало" 
+          value={startsAt} 
+          onChange={(v: Date | string | null) => {
+            if (v instanceof Date) {
+              setStartsAt(v)
+            } else if (typeof v === 'string') {
+              setStartsAt(new Date(v))
+            }
+          }} 
+          required 
+          popoverProps={{ withinPortal: true, zIndex: 10000 }}
+        />
+        <DateTimePicker 
+          label="Окончание" 
+          value={endsAt} 
+          onChange={(v: Date | string | null) => {
+            if (v instanceof Date) {
+              setEndsAt(v)
+            } else if (typeof v === 'string') {
+              setEndsAt(new Date(v))
+            } else {
+              setEndsAt(null)
+            }
+          }} 
+          popoverProps={{ withinPortal: true, zIndex: 10000 }}
+        />
+      </Group>
+      <Stack>
+        <Text size="sm" c="dimmed">Клик — поставить точку тренировки. Правый клик — добавить вершину полигона зоны. Двойной клик — очистить полигон.</Text>
+        <div style={{ height: 280, width: '100%' }}>
+          <MapContainer center={[53.9, 27.5667]} zoom={12} style={{ height: '100%', width: '100%' }}>
+            <MapVisibilityFixProfile />
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <ClickHandler />
+            {point && <Marker position={point} />}
+            {polygon.length >= 2 && <Polygon positions={polygon} pathOptions={{ color: 'teal' }} />}
+          </MapContainer>
+        </div>
+      </Stack>
+      <Group justify="flex-end">
+        <Button disabled={!title.trim() || !startsAt} loading={isSubmitting} onClick={async () => {
+          await onEdit({
+            title: title.trim(),
+            description: description.trim() || undefined,
+            starts_at: startsAt.toISOString(),
+            ends_at: endsAt ? endsAt.toISOString() : undefined,
+            lat: point ? point.lat : null,
+            lng: point ? point.lng : null,
+            area_points: polygon.length >= 3 ? polygon.map(p => [p.lng, p.lat]) as [number, number][] : null,
+            target_fish_kinds: targetFishKinds.length > 0 ? targetFishKinds : null,
+          })
+        }}>Сохранить изменения</Button>
       </Group>
     </Stack>
   )

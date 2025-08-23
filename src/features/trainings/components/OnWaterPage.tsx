@@ -8,6 +8,7 @@ import iconUrl from 'leaflet/dist/images/marker-icon.png'
 import iconShadowUrl from 'leaflet/dist/images/marker-shadow.png'
 import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
+import { useTrainingContext } from '../context/TrainingContext'
 import type { TrainingTakenUserBait } from '../api'
 import type { FishKind } from '../../dicts/fish/api'
 import styles from './OnWaterPage.module.css'
@@ -50,6 +51,7 @@ export function OnWaterPage({
   training,
   onUpdateCurrentRig
 }: OnWaterPageProps) {
+  const { state } = useTrainingContext()
   const [currentRig, setCurrentRig] = useState<CurrentRig>(() => {
     // Загружаем сохраненную оснастку из localStorage (только вес и заметки)
     try {
@@ -95,7 +97,7 @@ export function OnWaterPage({
 
   const [quickCatchModalOpened, quickCatchHandlers] = useDisclosure(false)
   const [quickEventModalOpened, quickEventHandlers] = useDisclosure(false)
-  const [eventKind, setEventKind] = useState<'strike' | 'lost' | 'snag' | null>(null)
+  const [eventKind, setEventKind] = useState<'strike' | 'lost' | 'snag'>('strike')
   const [rigSettingsOpened, rigSettingsHandlers] = useDisclosure(false)
   
   // Состояние для быстрого добавления
@@ -112,6 +114,13 @@ export function OnWaterPage({
     }
     return [53.9, 27.5667] as [number, number]
   }, [training])
+
+  // Автоматически выбираем текущую целевую рыбу при открытии модального окна поимки
+  useEffect(() => {
+    if (quickCatchModalOpened && state.currentTargetFish && !fishKindId) {
+      setFishKindId(state.currentTargetFish)
+    }
+  }, [quickCatchModalOpened, state.currentTargetFish, fishKindId])
 
   const baitOptions = takenBaits.map(tb => ({
     value: tb.user_bait_id,
@@ -194,7 +203,7 @@ export function OnWaterPage({
       })
       
       // Сброс формы
-      setEventKind(null)
+      setEventKind('strike')
       setNotes('')
       setPoint(null)
       quickEventHandlers.close()

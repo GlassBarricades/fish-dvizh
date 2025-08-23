@@ -1,13 +1,14 @@
 import { useParams, Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { Container, Stack, Card, Title, Text, Button, Group, Loader, Paper, Badge } from '@mantine/core'
+import { Container, Stack, Card, Title, Text, Button, Group, Loader, Paper } from '@mantine/core'
 import { IconArrowLeft } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useTraining, useTrainingTakenUserBaits, useCreateCatch, useCreateTrainingEvent } from '../features/trainings/hooks'
 import { useAuth } from '../features/auth/hooks'
 import { useFishKinds } from '../features/dicts/fish/hooks'
 import type { TrainingTakenUserBait } from '../features/trainings/api'
-import { OnWaterPage } from '../features/trainings/components'
+import { OnWaterPage, CurrentTargetFishSelector } from '../features/trainings/components'
+import { TrainingProvider } from '../features/trainings/context'
 
 interface CurrentRig {
   bait: TrainingTakenUserBait | null
@@ -166,64 +167,54 @@ export default function OnWaterTrainingPage() {
   }
 
   return (
-    <Container size="lg" py="md">
-      <Stack gap="md">
-        {/* Заголовок страницы */}
-        <Card withBorder p="md">
-          <Group justify="space-between" align="center">
-            <Stack gap={4}>
-              <Title order={2}>🌊 Режим "На воде"</Title>
-              <Text size="sm" c="dimmed">
-                {training.title} • {new Date(training.starts_at).toLocaleDateString('ru-RU')}
-              </Text>
-              {currentRig.bait && (
-                <Group gap="xs">
-                  <Text size="sm" c="dimmed" fw={500}>Оснастка:</Text>
-                  <Badge color="blue" variant="filled" size="sm">
-                    {currentRig.bait.brand || 'Без бренда'}
-                  </Badge>
-                  <Badge color="green" variant="filled" size="sm">
-                    {currentRig.bait.name || 'Без названия'}
-                  </Badge>
-                  {currentRig.bait.color && (
-                    <Badge color="orange" variant="filled" size="sm">
-                      {currentRig.bait.color}
-                    </Badge>
-                  )}
-                  {currentRig.bait.size && (
-                    <Badge color="purple" variant="filled" size="sm">
-                      {currentRig.bait.size}
-                    </Badge>
-                  )}
-                  {currentRig.weight > 0 && (
-                    <Badge color="red" variant="filled" size="sm">
-                      Груз: {currentRig.weight}г
-                    </Badge>
+    <TrainingProvider trainingId={trainingId}>
+      <Container size="lg" py="md">
+        <Stack gap="md">
+          {/* Заголовок страницы */}
+          <Card withBorder p="md">
+            <Group justify="space-between" align="center">
+              <Stack gap={4}>
+                <Title order={2}>🌊 Режим "На воде"</Title>
+                <Text size="sm" c="dimmed">
+                  {training.title} • {new Date(training.starts_at).toLocaleDateString('ru-RU')}
+                </Text>
+                
+                {/* Селектор целевой рыбы */}
+                <Group gap="xs" align="center">
+                  <Text size="sm" c="dimmed" fw={500}>
+                    Целевая рыба:
+                  </Text>
+                  {training?.target_fish_kinds && training.target_fish_kinds.length > 0 ? (
+                    <CurrentTargetFishSelector />
+                  ) : (
+                    <Text size="sm" c="red" fw={500}>
+                      Не задана для тренировки
+                    </Text>
                   )}
                 </Group>
-              )}
-            </Stack>
-            <Button 
-              component={Link} 
-              to={`/training/${trainingId}`} 
-              variant="light" 
-              leftSection={<IconArrowLeft size={16} />}
-            >
-              К тренировке
-            </Button>
-          </Group>
-        </Card>
+              </Stack>
+              <Button 
+                component={Link} 
+                to={`/training/${trainingId}`} 
+                variant="light" 
+                leftSection={<IconArrowLeft size={16} />}
+              >
+                К тренировке
+              </Button>
+            </Group>
+          </Card>
 
-        {/* Основной контент */}
-        <OnWaterPage
-          takenBaits={takenBaits || []}
-          fishKinds={fishKinds || []}
-          onQuickCatch={handleQuickCatch}
-          onQuickEvent={handleQuickEvent}
-          training={training}
-          onUpdateCurrentRig={handleUpdateCurrentRig}
-        />
-      </Stack>
-    </Container>
+          {/* Основной контент */}
+          <OnWaterPage
+            takenBaits={takenBaits || []}
+            fishKinds={fishKinds || []}
+            onQuickCatch={handleQuickCatch}
+            onQuickEvent={handleQuickEvent}
+            training={training}
+            onUpdateCurrentRig={handleUpdateCurrentRig}
+          />
+        </Stack>
+      </Container>
+    </TrainingProvider>
   )
 }

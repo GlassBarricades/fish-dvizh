@@ -10,6 +10,7 @@ export type Training = {
   lat?: number | null
   lng?: number | null
   area_geojson?: any | null
+  target_fish_kinds?: string[] | null // ID видов целевой рыбы
   created_by: string
   user_id?: string | null
   team_id?: string | null
@@ -26,6 +27,7 @@ export type CreateTrainingInput = {
   lat?: number | null
   lng?: number | null
   area_points?: [number, number][] | null
+  target_fish_kinds?: string[] | null // ID видов целевой рыбы
   user_id?: string | null
   team_id?: string | null
   created_by: string
@@ -33,6 +35,7 @@ export type CreateTrainingInput = {
 
 export type UpdateTrainingInput = Partial<Omit<CreateTrainingInput, 'created_by' | 'type'>> & {
   title?: string
+  target_fish_kinds?: string[] | null
 }
 
 

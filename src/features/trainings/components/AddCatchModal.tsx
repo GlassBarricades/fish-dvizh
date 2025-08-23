@@ -9,6 +9,7 @@ import { useParams } from 'react-router-dom'
 import { useFishKinds } from '../../dicts/fish/hooks'
 import { useTrainingTakenUserBaits } from '../hooks'
 import { useAuth } from '../../auth/hooks'
+import { useTrainingContext } from '../context/TrainingContext'
 import { CatchClick } from './CatchClick'
 
 interface AddCatchForm {
@@ -44,6 +45,7 @@ export function AddCatchModal({
   const { user } = useAuth()
   const { trainingId } = useParams<{ trainingId: string }>()
   const { data: takenBaitsInner } = useTrainingTakenUserBaits(trainingId, user?.id)
+  const { state } = useTrainingContext()
   
   const [fishKind, setFishKind] = useState<string | undefined>(undefined)
   const [weight, setWeight] = useState<number | undefined>(undefined)
@@ -77,6 +79,13 @@ export function AddCatchModal({
       if (found) setBaitId(found.id)
     }
   }, [opened, initialBait, baitId, takenOptions])
+
+  // Автоматически выбираем текущую целевую рыбу при открытии модального окна
+  useEffect(() => {
+    if (opened && state.currentTargetFish && !fishKind) {
+      setFishKind(state.currentTargetFish)
+    }
+  }, [opened, state.currentTargetFish, fishKind])
 
   const handleSubmit = () => {
     onSubmit({

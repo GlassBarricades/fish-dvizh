@@ -8,8 +8,6 @@ import { useTrainingData, useCreateCatch, useDeleteCatch, useUpdateCatch, useCre
 import { useFishKinds } from '../features/dicts/fish/hooks'
 import type { TrainingCatch, TrainingTask, TrainingEvent } from '../features/trainings/api'
 import {
-  TrainingProvider,
-  useTrainingContext,
   TrainingHeader,
   CatchesTab,
   MapTab,
@@ -25,6 +23,7 @@ import {
   RigTab,
   TrainingTips
 } from '../features/trainings/components'
+import { TrainingProvider, useTrainingContext } from '../features/trainings/context'
 
 // Extended type for catches with dict_baits from the API
 type TrainingCatchWithDict = TrainingCatch & {
@@ -657,6 +656,7 @@ function TrainingPageContent() {
               filterFish={undefined}
               filterUser={undefined}
               filterBait=""
+              targetFishKinds={training?.target_fish_kinds}
             />
           </Tabs.Panel>
 

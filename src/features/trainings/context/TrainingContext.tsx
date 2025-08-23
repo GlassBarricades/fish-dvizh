@@ -1,7 +1,8 @@
-import { createContext, useContext, useReducer, useCallback, useMemo } from 'react'
+import { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import type { Training } from '../types'
 import type { TrainingCatch, TrainingEvent, TrainingTakenUserBait } from '../api'
+import { useTraining } from '../hooks'
 
 // Типы для контекста
 export interface CurrentRig {
@@ -13,6 +14,7 @@ export interface CurrentRig {
 export interface TrainingState {
   training: Training | null
   currentRig: CurrentRig | null
+  currentTargetFish: string | null // ID текущей целевой рыбы участника
   catches: TrainingCatch[]
   events: TrainingEvent[]
   takenBaits: TrainingTakenUserBait[]
@@ -27,6 +29,7 @@ export type TrainingAction =
   | { type: 'SET_EVENTS'; payload: TrainingEvent[] }
   | { type: 'SET_TAKEN_BAITS'; payload: TrainingTakenUserBait[] }
   | { type: 'UPDATE_CURRENT_RIG'; payload: Partial<CurrentRig> }
+  | { type: 'SET_CURRENT_TARGET_FISH'; payload: string | null }
   | { type: 'ADD_CATCH'; payload: TrainingCatch }
   | { type: 'UPDATE_CATCH'; payload: TrainingCatch }
   | { type: 'DELETE_CATCH'; payload: string }
@@ -41,6 +44,7 @@ export type TrainingAction =
 const initialState: TrainingState = {
   training: null,
   currentRig: null,
+  currentTargetFish: null,
   catches: [],
   events: [],
   takenBaits: [],
@@ -70,6 +74,9 @@ function trainingReducer(state: TrainingState, action: TrainingAction): Training
           ? { ...state.currentRig, ...action.payload }
           : { bait: null, weight: 0, notes: '', ...action.payload }
       }
+    
+    case 'SET_CURRENT_TARGET_FISH':
+      return { ...state, currentTargetFish: action.payload }
     
     case 'ADD_CATCH':
       return { ...state, catches: [action.payload, ...state.catches] }
@@ -128,6 +135,7 @@ interface TrainingContextType {
   addEvent: (event: TrainingEvent) => void
   updateEvent: (event: TrainingEvent) => void
   deleteEvent: (id: string) => void
+  setCurrentTargetFish: (fishKindId: string | null) => void
   
   // Вычисляемые значения
   trainingUsers: Array<{ id: string; name: string }>
@@ -144,8 +152,36 @@ interface TrainingProviderProps {
   trainingId?: string
 }
 
-export function TrainingProvider({ children }: TrainingProviderProps) {
+export function TrainingProvider({ children, trainingId }: TrainingProviderProps) {
   const [state, dispatch] = useReducer(trainingReducer, initialState)
+  const { data: training } = useTraining(trainingId)
+
+  // Загружаем данные тренировки
+  useEffect(() => {
+    if (training) {
+      dispatch({ type: 'SET_TRAINING', payload: training })
+    }
+  }, [training])
+
+  // Загружаем сохранённые данные из localStorage при инициализации
+  useMemo(() => {
+    try {
+      // Загружаем текущую оснастку
+      const savedRig = localStorage.getItem('current-rig')
+      if (savedRig) {
+        const rigData = JSON.parse(savedRig)
+        dispatch({ type: 'UPDATE_CURRENT_RIG', payload: rigData })
+      }
+      
+      // Загружаем текущую целевую рыбу
+      const savedTargetFish = localStorage.getItem('current-target-fish')
+      if (savedTargetFish) {
+        dispatch({ type: 'SET_CURRENT_TARGET_FISH', payload: savedTargetFish })
+      }
+    } catch {
+      // Игнорируем ошибки localStorage
+    }
+  }, [])
 
   // Удобные методы
   const updateCurrentRig = useCallback((rig: Partial<CurrentRig>) => {
@@ -187,6 +223,17 @@ export function TrainingProvider({ children }: TrainingProviderProps) {
 
   const deleteEvent = useCallback((id: string) => {
     dispatch({ type: 'DELETE_EVENT', payload: id })
+  }, [])
+
+  const setCurrentTargetFish = useCallback((fishKindId: string | null) => {
+    dispatch({ type: 'SET_CURRENT_TARGET_FISH', payload: fishKindId })
+    
+    // Сохраняем в localStorage
+    try {
+      localStorage.setItem('current-target-fish', fishKindId || '')
+    } catch {
+      // Игнорируем ошибки localStorage
+    }
   }, [])
 
   // Вычисляемые значения
@@ -249,6 +296,7 @@ export function TrainingProvider({ children }: TrainingProviderProps) {
     addEvent,
     updateEvent,
     deleteEvent,
+    setCurrentTargetFish,
     trainingUsers,
     lastUserBait,
     activeTask

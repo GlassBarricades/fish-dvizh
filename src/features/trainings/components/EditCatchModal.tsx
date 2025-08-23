@@ -9,6 +9,7 @@ import iconShadowUrl from 'leaflet/dist/images/marker-shadow.png'
 import { useParams } from 'react-router-dom'
 import { useTrainingTakenUserBaits } from '../hooks'
 import { useAuth } from '../../auth/hooks'
+// import { useTrainingContext } from '../context/TrainingContext' // Пока не используется
 import type { TrainingCatch } from '../api'
 
 interface EditCatchForm {
@@ -43,6 +44,7 @@ export function EditCatchModal({
   const { user } = useAuth()
   const { trainingId } = useParams<{ trainingId: string }>()
   const { data: takenBaitsInner } = useTrainingTakenUserBaits(trainingId, user?.id)
+  // const { state } = useTrainingContext() // Пока не используется
   
   const [fishKindId, setFishKindId] = useState<string | undefined>(undefined)
   const [baitId, setBaitId] = useState<string | undefined>(undefined)
