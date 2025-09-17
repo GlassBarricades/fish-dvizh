@@ -1,6 +1,6 @@
 import { Badge, Card, Group, Loader, Select, Table, Text, Title } from '@mantine/core'
-import { useAdminUsers, useUpdateUserRole } from '../../features/admin/hooks'
-import type { Role } from '../../features/auth/roles'
+import { useAdminUsers, useUpdateUserRole } from '@/features/admin/hooks'
+import type { Role } from '@/features/auth/roles'
 import { notifications } from '@mantine/notifications'
 
 export default function AdminUsersPage() {

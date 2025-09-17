@@ -3,12 +3,12 @@ import { useEffect, useState } from 'react'
 import { Container, Stack, Card, Title, Text, Button, Group, Loader, Paper } from '@mantine/core'
 import { IconArrowLeft } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
-import { useTraining, useTrainingTakenUserBaits, useCreateCatch, useCreateTrainingEvent } from '../features/trainings/hooks'
-import { useAuth } from '../features/auth/hooks'
-import { useFishKinds } from '../features/dicts/fish/hooks'
-import type { TrainingTakenUserBait } from '../features/trainings/api'
-import { OnWaterPage, CurrentTargetFishSelector } from '../features/trainings/components'
-import { TrainingProvider } from '../features/trainings/context'
+import { useTraining, useTrainingTakenUserBaits, useCreateCatch, useCreateTrainingEvent } from '@/features/trainings/hooks'
+import { useAuth } from '@/features/auth/hooks'
+import { useFishKinds } from '@/features/dicts/fish/hooks'
+import type { TrainingTakenUserBait } from '@/features/trainings/api'
+import { OnWaterPage, CurrentTargetFishSelector } from '@/features/trainings/components'
+import { TrainingProvider } from '@/features/trainings/context'
 
 interface CurrentRig {
   bait: TrainingTakenUserBait | null

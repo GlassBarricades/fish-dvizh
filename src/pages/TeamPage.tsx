@@ -51,48 +51,28 @@ import type {
   TeamMember,
   TeamInvitation,
   TeamRole,
-} from "../features/teams/types";
-import {
-  useTeam,
-  useTeamMembers,
-  useTeamInvitations,
-  useUpdateTeam,
-  useDeleteTeam,
-  useRemoveTeamMember,
-  useUpdateTeamMemberRole,
-  useDeleteTeamInvitation,
-  useCreateTeamInvitation,
-} from "../features/teams/hooks";
-import { useAuth } from "../features/auth/hooks";
+} from "@/features/teams/types";
+import { useTeamMembers } from "@/features/teams/hooks";
+import { useAuth } from "@/features/auth/hooks";
 import { notifications } from "@mantine/notifications";
-import { useTeamTrainings, useCreateTraining, useDeleteTraining, useUpdateTraining } from '../features/trainings/hooks'
-import { useFishKinds } from '../features/dicts/fish/hooks'
+import { useTeamTrainings } from '@/features/trainings/hooks'
+import { useTeamPageVM } from '@/features/teams/model/useTeamPageVM'
+import { useFishKinds } from '@/features/dicts/fish/hooks'
 
 export default function TeamPage() {
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const {
-    data: team,
-    isLoading: teamLoading,
-    error: teamError,
-  } = useTeam(teamId!);
-  const { data: members, isLoading: membersLoading } = useTeamMembers(teamId!);
-  const { data: invitations, isLoading: invitationsLoading } =
-    useTeamInvitations(teamId!);
+  const vm = useTeamPageVM(teamId, user?.id)
+  const { teamQuery, membersQuery, invitationsQuery, trainingsQuery, onEditTeam, onDeleteTeam, onRemoveMember, onUpdateMemberRole, onDeleteInvitation, onCreateInvitation, createTraining, updateTraining, deleteTraining, isCreatingTraining, isUpdatingTraining, isDeletingTraining } = vm
+  const { data: team, isLoading: teamLoading, error: teamError } = teamQuery
+  const { data: members, isLoading: membersLoading } = membersQuery
+  const { data: invitations, isLoading: invitationsLoading } = invitationsQuery
 
   const { data: teamTrainings } = useTeamTrainings(teamId)
-     const { mutateAsync: createTraining, isPending: isCreatingTraining } = useCreateTraining()
-   const { mutateAsync: updateTraining, isPending: isUpdatingTraining } = useUpdateTraining()
-   const { mutateAsync: deleteTraining, isPending: isDeletingTraining } = useDeleteTraining()
 
-  const updateTeam = useUpdateTeam();
-  const deleteTeam = useDeleteTeam();
-  const removeMember = useRemoveTeamMember();
-  const updateMemberRole = useUpdateTeamMemberRole();
-  const deleteInvitation = useDeleteTeamInvitation();
-  const createInvitation = useCreateTeamInvitation();
+  
 
   const [editModalOpened, editModalHandlers] = useDisclosure(false);
   const [deleteModalOpened, deleteModalHandlers] = useDisclosure(false);
@@ -191,10 +171,7 @@ export default function TeamPage() {
     if (!teamId) return;
 
     try {
-      await updateTeam.mutateAsync({
-        id: teamId,
-        input: editForm,
-      });
+      await onEditTeam({ id: teamId, input: editForm });
       editModalHandlers.close();
     } catch (error) {
       console.error("Ошибка при обновлении команды:", error);
@@ -205,7 +182,7 @@ export default function TeamPage() {
     if (!teamId) return;
 
     try {
-      await deleteTeam.mutateAsync(teamId);
+      await onDeleteTeam(teamId);
       navigate("/profile");
     } catch (error) {
       console.error("Ошибка при удалении команды:", error);
@@ -216,10 +193,7 @@ export default function TeamPage() {
     try {
       const member = members?.find((m: TeamMember) => m.id === memberId);
       if (member) {
-        await removeMember.mutateAsync({
-          teamId: teamId!,
-          userId: member.user_id,
-        });
+        await onRemoveMember({ teamId: teamId!, userId: member.user_id });
       }
     } catch (error) {
       console.error("Ошибка при удалении участника:", error);
@@ -233,11 +207,7 @@ export default function TeamPage() {
     try {
       const member = members?.find((m: TeamMember) => m.id === memberId);
       if (member) {
-        await updateMemberRole.mutateAsync({
-          teamId: teamId!,
-          userId: member.user_id,
-          role: newRole,
-        });
+        await onUpdateMemberRole({ teamId: teamId!, userId: member.user_id, role: newRole });
       }
     } catch (error) {
       console.error("Ошибка при обновлении роли:", error);
@@ -246,7 +216,7 @@ export default function TeamPage() {
 
   const handleDeleteInvitation = async (invitationId: string) => {
     try {
-      await deleteInvitation.mutateAsync(invitationId);
+      await onDeleteInvitation(invitationId);
     } catch (error) {
       console.error("Ошибка при удалении приглашения:", error);
     }
@@ -256,17 +226,7 @@ export default function TeamPage() {
     if (!teamId || !user) return;
 
     try {
-      await createInvitation.mutateAsync({
-        team_id: teamId,
-        invited_user_email: inviteForm.email.trim(),
-        invited_by: user.id,
-        role: inviteForm.role,
-      });
-
-      notifications.show({
-        color: "green",
-        message: "Приглашение отправлено успешно",
-      });
+      await onCreateInvitation({ team_id: teamId, invited_user_email: inviteForm.email.trim(), invited_by: user.id, role: inviteForm.role });
 
       setInviteForm({ email: "", role: "member" });
       inviteModalHandlers.close();

@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { Paper, Stack, Title, Button, Group } from '@mantine/core'
-import { useAggregatedStandings, useTeamStandingsByPlaces } from '../features/results/hooks'
+import { useAggregatedStandings, useTeamStandingsByPlaces } from '@/features/results/hooks'
 
 export default function ResultsPublicPage() {
   const { competitionId } = useParams()

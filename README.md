@@ -1,69 +1,33 @@
-# React + TypeScript + Vite
+# FishDvizh — фронтенд
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Приложение на React + TypeScript + Vite с архитектурой Feature-Sliced (FSD) и PWA.
 
-Currently, two official plugins are available:
+## Архитектура (FSD)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Базовые слои и соглашения:
 
-## Expanding the ESLint configuration
+- `src/app/`
+  - `providers/` — корневые провайдеры приложения (`AppProviders`)
+  - `router.tsx` — маршруты приложения
+- `src/pages/` — страницы (композиция фич/виджетов, без бизнес-логики)
+- `src/features/` — автономные фичи с подструктурой:
+  - `api/` — обращение к API, эффекты
+  - `model/` — типы, стора, хуки
+  - `ui/` — компоненты (если есть)
+  - файлы верхнего уровня (`api.ts`, `hooks.ts`, `types.ts`) — реэкспорты для совместимости
+- `src/entities/` — базовые сущности (при необходимости)
+- `src/shared/` — переиспользуемые модули: `lib/`, `ui/`, `config/`
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Алиас `@` указывает на `src/`.
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Запуск
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm i
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Качество кода
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- ESLint уже настроен под TypeScript и React Hooks
+- Рекомендуется придерживаться FSD: бизнес-логика и эффекты — в `model/` и `api/`, страницы — без логики

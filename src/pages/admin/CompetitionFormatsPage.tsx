@@ -12,7 +12,7 @@ import {
   Title,
 } from '@mantine/core'
 import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-react'
-import { useCompetitionFormats, useCreateCompetitionFormat, useDeleteCompetitionFormat, useUpdateCompetitionFormat } from '../../features/dicts/formats/hooks'
+import { useCompetitionFormats, useCreateCompetitionFormat, useDeleteCompetitionFormat, useUpdateCompetitionFormat } from '@/features/dicts/formats/hooks'
 import { modals } from '@mantine/modals'
 import { notifications } from '@mantine/notifications'
 

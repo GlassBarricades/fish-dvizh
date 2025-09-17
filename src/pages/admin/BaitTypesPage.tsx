@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ActionIcon, Button, Card, Group, Modal, Stack, Table, TextInput, Title } from '@mantine/core'
 import { IconPencil, IconTrash } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
-import { useBaitTypes, useCreateBaitType, useDeleteBaitType, useUpdateBaitType } from '../../features/dicts/baitTypes/hooks'
+import { useBaitTypes, useCreateBaitType, useDeleteBaitType, useUpdateBaitType } from '@/features/dicts/baitTypes/hooks'
 
 export default function BaitTypesPage() {
   const { data } = useBaitTypes()

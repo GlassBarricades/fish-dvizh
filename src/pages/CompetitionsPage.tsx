@@ -1,6 +1,6 @@
 import { Anchor, Badge, Button, Card, Container, Group, Skeleton, Stack, Text, Title } from '@mantine/core'
 import { Link } from 'react-router-dom'
-import { useCompetitions } from '../features/competitions/hooks'
+import { useCompetitions } from '@/features/competitions/hooks'
 
 export default function CompetitionsPage() {
   const { data, isLoading } = useCompetitions()

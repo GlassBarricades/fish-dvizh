@@ -1,7 +1,7 @@
 import { ActionIcon, Button, Card, Group, Loader, Modal, NumberInput, Table, Text, TextInput, Title } from '@mantine/core'
 import { IconPencil, IconTrash } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
-import { useCreateTeamSize, useDeleteTeamSize, useTeamSizes, useUpdateTeamSize } from '../../features/dicts/teamSizes/hooks'
+import { useCreateTeamSize, useDeleteTeamSize, useTeamSizes, useUpdateTeamSize } from '@/features/dicts/teamSizes/hooks'
 import { useState } from 'react'
 import { notifications } from '@mantine/notifications'
 

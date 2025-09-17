@@ -1,8 +1,8 @@
 import { AppShell, Group, Burger, Button, ActionIcon, useMantineColorScheme, Text, Badge, Stack, Divider } from '@mantine/core'
 import classes from './App.module.css';
 import { useDisclosure } from '@mantine/hooks';
-import { useAuth } from './features/auth/hooks'
-import { supabase } from './lib/supabaseClient'
+import { useAuth } from '@/features/auth/hooks'
+import { supabase } from '@/lib/supabaseClient'
 import { IconMoon, IconSun } from '@tabler/icons-react'
 import { NavLink, Outlet } from 'react-router-dom'
 

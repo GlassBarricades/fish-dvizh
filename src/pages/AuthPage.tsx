@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { supabase } from '@/lib/supabaseClient'
 import { Button, Container, Group, Paper, PasswordInput, Stack, Text, TextInput, Title, Tabs } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useNavigate, useLocation } from 'react-router-dom'

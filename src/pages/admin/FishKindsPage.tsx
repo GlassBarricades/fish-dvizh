@@ -1,7 +1,7 @@
 import { ActionIcon, Button, Card, Group, Loader, Modal, Table, Text, TextInput, Title } from '@mantine/core'
 import { IconPencil, IconTrash } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
-import { useCreateFishKind, useDeleteFishKind, useFishKinds, useUpdateFishKind } from '../../features/dicts/fish/hooks'
+import { useCreateFishKind, useDeleteFishKind, useFishKinds, useUpdateFishKind } from '@/features/dicts/fish/hooks'
 import { useState } from 'react'
 import { notifications } from '@mantine/notifications'
 

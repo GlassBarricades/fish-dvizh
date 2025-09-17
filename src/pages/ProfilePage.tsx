@@ -33,37 +33,45 @@ const defaultIcon = new L.Icon({
 L.Marker.prototype.options.icon = defaultIcon
 import { IconPlus, IconUserPlus, IconCrown, IconUsers } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
-import { useAuth } from '../features/auth/hooks'
-import { useUserTeams, useCreateTeam, useDeleteTeam, useCreateTeamInvitation, useUserInvitations, useAcceptTeamInvitation, useTeamMembers } from '../features/teams/hooks'
-import type { Team } from '../features/teams/types'
+import { useAuth } from '@/features/auth/hooks'
+import { useTeamMembers } from '@/features/teams/hooks'
+import type { Team } from '@/features/teams/types'
 import { useNavigate } from 'react-router-dom'
-import { useUserJudgeInvitations, useRespondJudgeInvitation } from '../features/judges/hooks'
-import { useUserTrainings, useCreateTraining, useDeleteTraining, useUpdateTraining, useUserCatches, useCatchesByUsers } from '../features/trainings/hooks'
-import { useBaits } from '../features/dicts/baits/hooks'
-import { useUserBaits, useAddUserBaitFromDict, useAddCustomUserBait, useDeleteUserBait } from '../features/userBaits/hooks'
-import { useFishKinds } from '../features/dicts/fish/hooks'
+import { useCatchesByUsers } from '@/features/trainings/hooks'
+import { useFishKinds } from '@/features/dicts/fish/hooks'
+import { useProfilePageVM } from '@/features/profile/model/useProfilePageVM'
 
 export default function ProfilePage() {
   const { user } = useAuth()
-  const { data: trainings } = useUserTrainings(user?.id)
-  const { data: userCatches } = useUserCatches(user?.id)
-  const { mutateAsync: createTraining, isPending: isCreatingTraining } = useCreateTraining()
-  const { mutateAsync: deleteTraining, isPending: isDeletingTraining } = useDeleteTraining()
-  const { mutateAsync: updateTraining, isPending: isUpdatingTraining } = useUpdateTraining()
-  const { data: userTeams, isLoading: teamsLoading } = useUserTeams(user?.id || '')
-  const { data: userInvitations, isLoading: invitationsLoading } = useUserInvitations(user?.id || '')
-  const { mutateAsync: deleteTeam } = useDeleteTeam()
-  const { mutateAsync: createTeam, isPending: isCreating } = useCreateTeam()
-  const { mutateAsync: createInvitation, isPending: isInviting } = useCreateTeamInvitation()
-  const { mutateAsync: acceptInvitation } = useAcceptTeamInvitation()
-  const { data: judgeInvites } = useUserJudgeInvitations(user?.id)
-  const { mutateAsync: respondJudgeInvite } = useRespondJudgeInvitation()
-  // User baits
-  const { data: dictBaits } = useBaits()
-  const { data: userBaits } = useUserBaits(user?.id)
-  const { mutateAsync: addFromDict, isPending: isAddingFromDict } = useAddUserBaitFromDict()
-  const { mutateAsync: addCustom, isPending: isAddingCustom } = useAddCustomUserBait()
-  const { mutateAsync: removeUserBait } = useDeleteUserBait()
+  const {
+    trainings,
+    userCatches,
+    userTeams,
+    teamsLoading,
+    userInvitations,
+    invitationsLoading,
+    judgeInvites,
+    dictBaits,
+    userBaits,
+    createTraining,
+    deleteTraining,
+    updateTraining,
+    isCreatingTraining,
+    isDeletingTraining,
+    isUpdatingTraining,
+    deleteTeam,
+    createTeam,
+    isCreatingTeam: isCreating,
+    createInvitation,
+    isInvitingTeamMate: isInviting,
+    acceptInvitation,
+    respondJudgeInvite,
+    addFromDict,
+    isAddingFromDict,
+    addCustom,
+    isAddingCustom,
+    removeUserBait,
+  } = useProfilePageVM(user?.id)
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)

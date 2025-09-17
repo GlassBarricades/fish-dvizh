@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { ActionIcon, Button, Card, Group, Modal, Stack, Table, TextInput, Title, Select } from '@mantine/core'
 import { IconPencil, IconTrash } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
-import { useBaits, useCreateBait, useDeleteBait, useUpdateBait } from '../../features/dicts/baits/hooks'
-import { useBaitTypes } from '../../features/dicts/baitTypes/hooks'
-import { useBaitManufacturers } from '../../features/dicts/baitManufacturers/hooks'
+import { useBaits, useCreateBait, useDeleteBait, useUpdateBait } from '@/features/dicts/baits/hooks'
+import { useBaitTypes } from '@/features/dicts/baitTypes/hooks'
+import { useBaitManufacturers } from '@/features/dicts/baitManufacturers/hooks'
 
 export default function BaitsPage() {
   const { data } = useBaits()

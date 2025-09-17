@@ -1,22 +1,22 @@
 import { useParams } from 'react-router-dom'
-import { useAuth } from '../features/auth/hooks'
+import { useAuth } from '@/features/auth/hooks'
 import { Button, Group, Paper, Select, Stack, Tabs, Text, TextInput, NumberInput, Title, Badge } from '@mantine/core'
 import { useState } from 'react'
-import { useCompetition, useCompetitionFishKinds } from '../features/competitions/hooks'
-import { useCompetitionJudges, useCreateJudgeInvitation, useIsUserJudge } from '../features/judges/hooks'
-import { useCompetitionParticipants, useCreateResult, useResults, useUpdateResult, useDeleteResult } from '../features/results/hooks'
-import { useFishKinds } from '../features/dicts/fish/hooks'
-import { TeamsTab } from '../features/teams/TeamsTab'
-import { ZonesTab } from '../features/zones/ZonesTab'
-import { ScheduleTab } from '../features/schedule/ScheduleTab'
-import { useTeamSizes } from '../features/dicts/teamSizes/hooks'
-import { useCompetitionFormats } from '../features/dicts/formats/hooks'
+import { useCompetition, useCompetitionFishKinds } from '@/features/competitions/hooks'
+import { useCompetitionJudges, useCreateJudgeInvitation, useIsUserJudge } from '@/features/judges/hooks'
+import { useCompetitionParticipants, useCreateResult, useResults, useUpdateResult, useDeleteResult } from '@/features/results/hooks'
+import { useFishKinds } from '@/features/dicts/fish/hooks'
+import { TeamsTab } from '@/features/teams/TeamsTab'
+import { ZonesTab } from '@/features/zones/ZonesTab'
+import { ScheduleTab } from '@/features/schedule/ScheduleTab'
+import { useTeamSizes } from '@/features/dicts/teamSizes/hooks'
+import { useCompetitionFormats } from '@/features/dicts/formats/hooks'
 import { notifications } from '@mantine/notifications'
-import { useSetParticipantCheckin } from '../features/results/hooks'
-import { useZones } from '../features/zones/hooks'
-import { useAssignJudge, useZoneJudges, useRoundAssignments } from '../features/zones/assignments/hooks'
-import { useRounds } from '../features/schedule/hooks'
-import { useCompetitionRoles, useAssignCompetitionRole, useRemoveCompetitionRole } from '../features/competitionRoles/hooks'
+import { useSetParticipantCheckin } from '@/features/results/hooks'
+import { useZones } from '@/features/zones/hooks'
+import { useAssignJudge, useZoneJudges, useRoundAssignments } from '@/features/zones/assignments/hooks'
+import { useRounds } from '@/features/schedule/hooks'
+import { useCompetitionRoles, useAssignCompetitionRole, useRemoveCompetitionRole } from '@/features/competitionRoles/hooks'
 
 export default function CompetitionPage() {
   const { competitionId } = useParams()
@@ -296,12 +296,12 @@ function ResultsTab({ competitionId, currentUserId, competitionCreatorId, curren
           <Select
             label="Участник"
             data={(participants ?? [])
-              .filter((p) => {
+              .filter((p: import('@/features/results/types').CompetitionParticipant) => {
                 if (!isJudge || !judgeZoneId || !activeRoundId || !assignments) return true
                 const a = assignments.find((x: any) => x.participant_user_id === p.user_id)
                 return a ? a.zone_id === judgeZoneId : false
               })
-              .map(p => ({ value: p.user_id, label: p.user_nickname || p.user_email || p.user_id }))}
+              .map((p: import('@/features/results/types').CompetitionParticipant) => ({ value: p.user_id, label: p.user_nickname || p.user_email || p.user_id }))}
             value={participantId}
             onChange={setParticipantId}
             searchable
@@ -340,7 +340,7 @@ function ResultsTab({ competitionId, currentUserId, competitionCreatorId, curren
             <Stack gap={6}>
               <Text fw={600}>Участники (чек-ин)</Text>
               <Group wrap="wrap" gap="xs">
-                {(participants ?? []).map((p) => (
+                {(participants ?? []).map((p: import('@/features/results/types').CompetitionParticipant) => (
                   <Button key={p.user_id} size="xs" variant={p.checked_in ? 'filled' : 'light'} color={p.checked_in ? 'teal' : 'gray'} onClick={async () => {
                     try {
                       await setCheckin({ userId: p.user_id, checked: !p.checked_in })
@@ -355,7 +355,7 @@ function ResultsTab({ competitionId, currentUserId, competitionCreatorId, curren
             </Stack>
           </Paper>
         )}
-        {(results ?? []).map((r) => (
+        {(results ?? []).map((r: import('@/features/results/types').CompetitionResult) => (
           <ResultItem
             key={r.id}
             result={r}

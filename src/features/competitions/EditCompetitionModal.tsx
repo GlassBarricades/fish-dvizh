@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button, Group, MultiSelect, Stack, TextInput, Textarea, Select, NumberInput } from '@mantine/core'
 import { DateTimePicker } from '@mantine/dates'
-import { useDeleteCompetition, useSetCompetitionFishKinds, useUpdateCompetition, useCompetitionFishKinds } from './hooks'
+import { useDeleteCompetition, useSetCompetitionFishKinds, useUpdateCompetition, useCompetitionFishKinds } from './model/hooks'
 import { useFishKinds } from '../dicts/fish/hooks'
 import { useCompetitionFormats } from '../dicts/formats/hooks'
 import { useTeamSizes } from '../dicts/teamSizes/hooks'
