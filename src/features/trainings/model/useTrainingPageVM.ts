@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useGeolocation } from '../hooks/useGeolocation'
 import { notifications } from '@mantine/notifications'
 import { useAuth } from '@/features/auth/hooks'
 import { useFishKinds } from '@/features/dicts/fish/hooks'
@@ -46,6 +47,9 @@ export function useTrainingPageVM(trainingId: string | undefined, userId: string
   const { mutateAsync: removeEvent } = useDeleteTrainingEvent()
   const { mutateAsync: updateEvent } = useUpdateTrainingEvent()
   const { mutateAsync: setTakenBaits } = useSetTrainingTakenUserBaits()
+
+  // Геолокация пользователя для дефолтных координат
+  const { coords: userCoords } = useGeolocation()
 
   useEffect(() => {
     if (training) dispatch({ type: 'SET_TRAINING', payload: training })
@@ -278,8 +282,8 @@ export function useTrainingPageVM(trainingId: string | undefined, userId: string
       user_id: user.id,
       kind: data.kind,
       bait_id: baitIdToSave,
-      lat: data.point?.lat ?? training?.lat ?? 53.9,
-      lng: data.point?.lng ?? training?.lng ?? 27.5667,
+      lat: data.point?.lat ?? userCoords?.lat ?? training?.lat ?? 53.9,
+      lng: data.point?.lng ?? userCoords?.lng ?? training?.lng ?? 27.5667,
       notes: data.notes,
     }
     await addEvent(eventData)
@@ -325,8 +329,8 @@ export function useTrainingPageVM(trainingId: string | undefined, userId: string
       user_id: user.id,
       kind: data.kind,
       bait_id: data.currentBait.user_bait_id,
-      lat: data.point?.lat ?? training?.lat ?? 53.9,
-      lng: data.point?.lng ?? training?.lng ?? 27.5667,
+      lat: data.point?.lat ?? userCoords?.lat ?? training?.lat ?? 53.9,
+      lng: data.point?.lng ?? userCoords?.lng ?? training?.lng ?? 27.5667,
       notes: data.notes,
     }
     await addEvent(eventData)

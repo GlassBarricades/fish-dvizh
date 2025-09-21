@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Container, Loader, Paper, Stack, Text, Title, Tabs } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/features/auth/hooks'
@@ -21,6 +21,7 @@ import {
   TrainingTips
 } from '@/features/trainings/components'
 import { TrainingProvider } from '@/features/trainings/context'
+import { useTrainingContext } from '@/features/trainings/context'
 import { useTrainingPageVM } from '@/features/trainings/model/useTrainingPageVM'
 
 // Extended type for catches with dict_baits from the API
@@ -37,6 +38,8 @@ function TrainingPageContent() {
   const { trainingId } = useParams<{ trainingId: string }>()
   const { user } = useAuth()
   const vm = useTrainingPageVM(trainingId, user?.id)
+  const { state, updateCurrentRig, dispatch } = useTrainingContext()
+  const { currentRig } = state
   const {
     training,
     catches,
@@ -168,31 +171,9 @@ function TrainingPageContent() {
     notes?: string
     point?: { lat: number; lng: number } | null
   }) => {
-          if (!user || !trainingId) return
-          try {
-            const selected = (takenBaitsTop || []).find((tb: any) => tb.user_bait_id === values.bait_id)
-            const dictId = selected?.dict_bait_id || null
-            const label = selected ? `${selected.brand ?? ''} ${selected.name ?? ''}${selected.color ? ' ' + selected.color : ''}${selected.size ? ' ' + selected.size : ''}`.trim() : undefined
-            await createCatch({
-              training_id: trainingId,
-              user_id: user.id,
-              fish_kind_id: values.fish_kind_id || null,
-              bait_id: dictId,
-              weight_g: values.weight_g ?? null,
-              length_cm: values.length_cm ?? null,
-              lat: values.point?.lat ?? null,
-              lng: values.point?.lng ?? null,
-              caught_at: values.caught_at,
-              released: values.released,
-              notes: values.notes || undefined,
-              bait_name: dictId ? undefined : (label || undefined),
-            })
-            notifications.show({ color: 'green', message: 'Поимка добавлена' })
-            handlers.close()
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Не удалось добавить поимку'
-      notifications.show({ color: 'red', message })
-    }
+    if (!user || !trainingId) return
+    await addCatch(values)
+    handlers.close()
   }
 
   const handleDeleteCatch = async (id: string) => { await removeCatch(id) }
@@ -209,41 +190,14 @@ function TrainingPageContent() {
     point?: { lat: number; lng: number } | null
   }) => {
     if (!user || !trainingId || !editingCatch) return
-    try {
-      const selected = (takenBaitsTop || []).find((tb: any) => tb.user_bait_id === values.bait_id)
-      const dictId = selected?.dict_bait_id || null
-      const label = selected ? `${selected.brand ?? ''} ${selected.name ?? ''}${selected.color ? ' ' + selected.color : ''}${selected.size ? ' ' + selected.size : ''}`.trim() : undefined
-      
-      await updateCatch({
-        id: editingCatch.id,
-        trainingId,
-        input: {
-          fish_kind_id: values.fish_kind_id || null,
-          bait_id: dictId,
-              weight_g: values.weight_g ?? null,
-              length_cm: values.length_cm ?? null,
-          lat: values.point?.lat ?? null,
-          lng: values.point?.lng ?? null,
-              caught_at: values.caught_at,
-              released: values.released,
-          notes: values.notes || undefined,
-          bait_name: dictId ? undefined : (label || undefined),
-        }
-      })
-      
-            notifications.show({ color: 'green', message: 'Поимка обновлена' })
-      editCatchModalHandlers.close()
-      setEditingCatch(null)
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Не удалось обновить поимку'
-      notifications.show({ color: 'red', message })
-    }
+    await editCatch(editingCatch, values)
+    editCatchModalHandlers.close()
+    setEditingCatch(null)
   }
 
   const handleDeleteEvent = async (id: string) => {
     if (!trainingId) return
-    await removeEvent({ id, trainingId: trainingId as string })
-    notifications.show({ color: 'gray', message: 'Пин удалён' })
+    await deleteEvent(id)
   }
 
   const handleSaveTakenBaits = async (ids: string[]) => { await saveTakenBaits(ids); takenModalHandlers.close() }
@@ -478,10 +432,7 @@ function TrainingPageContent() {
   )
 }
 
-// Вспомогательная функция для меток пинов
-function pinLabel(kind: 'strike' | 'lost' | 'snag') {
-  return kind === 'strike' ? 'Поклёвка' : kind === 'lost' ? 'Сход' : 'Зацеп'
-}
+
 
 // Обёртка с TrainingProvider
 export default function TrainingPage() {

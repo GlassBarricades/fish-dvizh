@@ -11,6 +11,8 @@ import { useTrainingTakenUserBaits } from '../hooks'
 import { useAuth } from '../../auth/hooks'
 import { useTrainingContext } from '../context/TrainingContext'
 import { CatchClick } from './CatchClick'
+import { FlyToPosition } from './FlyToPosition'
+import { useGeolocation } from '../hooks/useGeolocation'
 
 interface AddCatchForm {
   fish_kind_id?: string
@@ -55,6 +57,7 @@ export function AddCatchModal({
   const [released, setReleased] = useState<boolean>(true)
   const [notes, setNotes] = useState<string>('')
   const [point, setPoint] = useState<L.LatLng | null>(null)
+  const { coords: userCoords } = useGeolocation()
 
   const takenOptions = (takenBaitsInner ?? []).map((tb: any) => ({ 
     id: tb.user_bait_id, 
@@ -68,10 +71,21 @@ export function AddCatchModal({
     if (training?.lat && training?.lng) {
       return [training.lat, training.lng] as [number, number]
     }
+    // Иначе если доступна геопозиция пользователя
+    if (userCoords) {
+      return [userCoords.lat, userCoords.lng] as [number, number]
+    }
     
     // Дефолтный центр
     return [53.9, 27.5667] as [number, number]
   })()
+
+  // При открытии модалки, если есть геопозиция — ставим точку туда
+  useEffect(() => {
+    if (opened && userCoords) {
+      setPoint(new L.LatLng(userCoords.lat, userCoords.lng))
+    }
+  }, [opened, userCoords])
 
   useEffect(() => {
     if (opened && initialBait && !baitId) {
@@ -172,6 +186,8 @@ export function AddCatchModal({
           <div style={{ height: 260 }}>
             <MapContainer center={mapCenter} zoom={12} style={{ height: '100%', width: '100%' }}>
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              {/* Максимально приблизить к пользователю, если есть координаты */}
+              {userCoords && <FlyToPosition lat={userCoords.lat} lng={userCoords.lng} zoom={17} />}
               <CatchClick setPoint={setPoint} />
               {point && (
                 <Marker 

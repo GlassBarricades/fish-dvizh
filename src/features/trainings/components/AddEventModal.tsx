@@ -3,6 +3,8 @@ import { Modal, Stack, Group, Select, Textarea, Button } from '@mantine/core'
 import { DateTimePicker } from '@mantine/dates'
 import { MapContainer, Marker, TileLayer } from 'react-leaflet'
 import { MapClickHandler } from './MapClickHandler'
+import { FlyToPosition } from './FlyToPosition'
+import { useGeolocation } from '../hooks/useGeolocation'
 import L from 'leaflet'
 import iconUrl from 'leaflet/dist/images/marker-icon.png'
 import iconShadowUrl from 'leaflet/dist/images/marker-shadow.png'
@@ -41,6 +43,7 @@ export function AddEventModal({
   const [eventAt, setEventAt] = useState<Date | null>(new Date())
   const [notes, setNotes] = useState<string>('')
   const [point, setPoint] = useState<L.LatLng | null>(null)
+  const { coords: userCoords } = useGeolocation()
 
   const takenOptions = (takenBaitsInner ?? []).map((tb: any) => ({ 
     id: tb.user_bait_id, 
@@ -54,6 +57,9 @@ export function AddEventModal({
     if (training?.lat && training?.lng) {
       return [training.lat, training.lng] as [number, number]
     }
+    if (userCoords) {
+      return [userCoords.lat, userCoords.lng] as [number, number]
+    }
     
     // Дефолтный центр
     return [53.9, 27.5667] as [number, number]
@@ -65,9 +71,10 @@ export function AddEventModal({
       setBaitId(undefined)
       setEventAt(new Date())
       setNotes('')
-      setPoint(null)
+      if (userCoords) setPoint(new L.LatLng(userCoords.lat, userCoords.lng))
+      else setPoint(null)
     }
-  }, [opened])
+  }, [opened, userCoords])
 
   const handleSubmit = () => {
     const submitData = {
@@ -139,6 +146,7 @@ export function AddEventModal({
           <div style={{ height: 260 }}>
             <MapContainer center={mapCenter} zoom={12} style={{ height: '100%', width: '100%' }}>
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              {userCoords && <FlyToPosition lat={userCoords.lat} lng={userCoords.lng} zoom={17} />}
               <MapClickHandler setPoint={setPoint} />
               {point && (
                 <Marker 

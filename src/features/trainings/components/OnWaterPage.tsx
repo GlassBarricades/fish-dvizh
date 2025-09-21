@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from 'react'
 import { Stack, Group, Card, Title, Text, Button, Select, NumberInput, Switch, Textarea, Badge, Modal, ActionIcon } from '@mantine/core'
 import { IconSettings } from '@tabler/icons-react'
 import { MapContainer, Marker, TileLayer } from 'react-leaflet'
+import { FlyToPosition } from './FlyToPosition'
+import { useGeolocation } from '../hooks/useGeolocation'
 import { MapClickHandler } from './MapClickHandler'
 import L from 'leaflet'
 import iconUrl from 'leaflet/dist/images/marker-icon.png'
@@ -107,13 +109,17 @@ export function OnWaterPage({
   const [released, setReleased] = useState<boolean>(false)
   const [notes, setNotes] = useState<string>('')
   const [point, setPoint] = useState<L.LatLng | null>(null)
+  const { coords: userCoords } = useGeolocation()
   
   const mapCenter = useMemo(() => {
     if (training?.lat && training?.lng) {
       return [training.lat, training.lng] as [number, number]
     }
+    if (userCoords) {
+      return [userCoords.lat, userCoords.lng] as [number, number]
+    }
     return [53.9, 27.5667] as [number, number]
-  }, [training])
+  }, [training, userCoords])
 
   // Автоматически выбираем текущую целевую рыбу при открытии модального окна поимки
   useEffect(() => {
@@ -121,6 +127,13 @@ export function OnWaterPage({
       setFishKindId(state.currentTargetFish)
     }
   }, [quickCatchModalOpened, state.currentTargetFish, fishKindId])
+
+  // При открытии быстрых модалок ставим точку в геолокацию пользователя, если доступна
+  useEffect(() => {
+    if ((quickCatchModalOpened || quickEventModalOpened) && userCoords) {
+      setPoint(new L.LatLng(userCoords.lat, userCoords.lng))
+    }
+  }, [quickCatchModalOpened, quickEventModalOpened, userCoords])
 
   const baitOptions = takenBaits.map(tb => ({
     value: tb.user_bait_id,
@@ -477,6 +490,7 @@ export function OnWaterPage({
             <div style={{ height: 260 }}>
               <MapContainer center={mapCenter} zoom={12} style={{ height: '100%', width: '100%' }}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                {userCoords && <FlyToPosition lat={userCoords.lat} lng={userCoords.lng} zoom={17} />}
                 <MapClickHandler setPoint={setPoint} />
                 {point && (
                   <Marker 
@@ -527,6 +541,7 @@ export function OnWaterPage({
             <div style={{ height: 260 }}>
               <MapContainer center={mapCenter} zoom={12} style={{ height: '100%', width: '100%' }}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                {userCoords && <FlyToPosition lat={userCoords.lat} lng={userCoords.lng} zoom={17} />}
                 <MapClickHandler setPoint={setPoint} />
                 {point && (
                   <Marker 
