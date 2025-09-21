@@ -94,7 +94,7 @@ export function useTeamStandings(competitionId: string) {
         byUser[uid].count += 1
       }
       // Sum per team (простое правило: сумма веса всех участников команды)
-      const rows = teamParts.map((t) => {
+      const rows = teamParts.map((t: any) => {
         let totalWeight = 0
         let totalCount = 0
         for (const uid of t.participant_user_ids) {
@@ -180,7 +180,7 @@ export function useTeamStandingsByPlaces(competitionId: string) {
         }
         return { teamId: t.team_id, teamName: t.team_name || t.team_id, sumPlaces, totalWeight }
       })
-      rows.sort((a, b) => a.sumPlaces - b.sumPlaces || b.totalWeight - a.totalWeight)
+      rows.sort((a: { sumPlaces: number; totalWeight: number }, b: { sumPlaces: number; totalWeight: number }) => a.sumPlaces - b.sumPlaces || b.totalWeight - a.totalWeight)
       return rows
     },
     enabled: !!competitionId,

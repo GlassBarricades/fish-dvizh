@@ -41,7 +41,7 @@ export default function ResultsPublicPage() {
               </tr>
             </thead>
             <tbody>
-              {(personal || []).map((r, i) => (
+              {(personal || []).map((r: { userId: string; totalWeight: number; totalCount: number }, i: number) => (
                 <tr key={r.userId}>
                   <td>{i + 1}</td>
                   <td>{r.userId}</td>

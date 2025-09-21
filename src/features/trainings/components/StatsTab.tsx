@@ -1,6 +1,6 @@
 import { Stack, Group, Card, Title, Text } from '@mantine/core'
 import type { TrainingCatch, TrainingEvent } from '../api'
-import type { FishKind } from '../../dicts/fish/api'
+import type { FishKind } from '../../dicts/fish/model/types'
 
 interface StatsTabProps {
   catches: TrainingCatch[]

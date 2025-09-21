@@ -2,7 +2,7 @@ import { notifications } from '@mantine/notifications'
 import { useTeam, useTeamMembers, useTeamInvitations, useUpdateTeam, useDeleteTeam, useRemoveTeamMember, useUpdateTeamMemberRole, useDeleteTeamInvitation, useCreateTeamInvitation } from '@/features/teams/hooks'
 import { useTeamTrainings, useCreateTraining, useDeleteTraining, useUpdateTraining } from '@/features/trainings/hooks'
 
-export function useTeamPageVM(teamId?: string, userId?: string) {
+export function useTeamPageVM(teamId?: string, _userId?: string) {
   // base data
   const teamQuery = useTeam(teamId!)
   const membersQuery = useTeamMembers(teamId!)
@@ -31,7 +31,7 @@ export function useTeamPageVM(teamId?: string, userId?: string) {
   async function onRemoveMember(values: { teamId: string; userId: string }) {
     await removeMember.mutateAsync(values)
   }
-  async function onUpdateMemberRole(values: { teamId: string; userId: string; role: string }) {
+  async function onUpdateMemberRole(values: { teamId: string; userId: string; role: 'member' | 'captain' | 'coach' | 'creator' }) {
     await updateMemberRole.mutateAsync(values)
   }
   async function onDeleteInvitation(id: string) {

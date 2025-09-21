@@ -12,7 +12,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { useTrainingContext } from '../context/TrainingContext'
 import type { TrainingTakenUserBait } from '../api'
-import type { FishKind } from '../../dicts/fish/api'
+import type { FishKind } from '../../dicts/fish/model/types'
 import styles from './OnWaterPage.module.css'
 
 interface OnWaterPageProps {

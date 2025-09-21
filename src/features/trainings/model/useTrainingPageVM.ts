@@ -25,8 +25,7 @@ type QuickEventInput = {
 }
 
 export function useTrainingPageVM(trainingId: string | undefined, userId: string | undefined) {
-  const { state, updateCurrentRig, dispatch } = useTrainingContext()
-  const { currentRig } = state
+  const { updateCurrentRig, dispatch } = useTrainingContext()
   const { user } = useAuth()
   const { data: fishKinds } = useFishKinds()
 

@@ -11,7 +11,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { Modal } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import type { TrainingTakenUserBait } from '../api'
-import type { FishKind } from '../../dicts/fish/api'
+import type { FishKind } from '../../dicts/fish/model/types'
 
 interface RigTabProps {
   takenBaits: TrainingTakenUserBait[]
