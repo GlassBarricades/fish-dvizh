@@ -18,7 +18,7 @@ function App() {
       padding="md"
       styles={{
         root: {
-          width: '100vw',
+          width: '100%'
         },
       }}
     >
@@ -31,6 +31,9 @@ function App() {
               <Group gap="xs">
                 <NavLink to="/" className={({ isActive }) => isActive ? `${classes.link} ${classes.linkActive}` : classes.link}>
                   Главная
+                </NavLink>
+                <NavLink to="/leaderboard" className={({ isActive }) => isActive ? `${classes.link} ${classes.linkActive}` : classes.link}>
+                  Рейтинг
                 </NavLink>
                 <NavLink to="/competitions" className={({ isActive }) => isActive ? `${classes.link} ${classes.linkActive}` : classes.link}>
                   Соревнования
@@ -76,6 +79,9 @@ function App() {
         <Stack gap="xs">
           <NavLink to="/" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
             Главная
+          </NavLink>
+          <NavLink to="/leaderboard" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
+            Рейтинг
           </NavLink>
           <NavLink to="/competitions" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
             Соревнования

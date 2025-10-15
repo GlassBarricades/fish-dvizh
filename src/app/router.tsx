@@ -25,6 +25,7 @@ const BaitTypesPage = lazy(() => import('@/pages/admin/BaitTypesPage'))
 const ScoreboardPage = lazy(() => import('@/pages/ScoreboardPage'))
 const ResultsPublicPage = lazy(() => import('@/pages/ResultsPublicPage'))
 const JudgePage = lazy(() => import('@/pages/JudgePage'))
+const LeaderboardPage = lazy(() => import('@/pages/LeaderboardPage'))
 
 export const router = createBrowserRouter([
   {
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
       { path: 'map', element: <Suspense fallback={null}><MapPage /></Suspense> },
       { path: 'competitions', element: <Suspense fallback={null}><CompetitionsPage /></Suspense> },
       { path: 'profile', element: <Suspense fallback={null}><ProfilePage /></Suspense> },
+      { path: 'leaderboard', element: <Suspense fallback={null}><LeaderboardPage /></Suspense> },
       { path: 'team/:teamId', element: <Suspense fallback={null}><TeamPage /></Suspense> },
       { path: 'competition/:competitionId', element: <Suspense fallback={null}><CompetitionPage /></Suspense> },
       {

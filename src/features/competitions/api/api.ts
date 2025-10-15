@@ -12,6 +12,21 @@ export async function fetchCompetitions(): Promise<Competition[]> {
   return data as Competition[]
 }
 
+export async function fetchUpcomingCompetitions(limit?: number): Promise<Competition[]> {
+  const nowIso = new Date().toISOString()
+  let query = supabase
+    .from(TABLE)
+    .select('*')
+    .gte('starts_at', nowIso)
+    .order('starts_at', { ascending: true })
+  if (typeof limit === 'number' && limit > 0) {
+    query = query.limit(limit)
+  }
+  const { data, error } = await query
+  if (error) throw error
+  return data as Competition[]
+}
+
 export async function fetchCompetitionById(id: string): Promise<Competition> {
   const { data, error } = await supabase
     .from(TABLE)
