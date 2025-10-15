@@ -52,7 +52,7 @@ import type {
   TeamInvitation,
   TeamRole,
 } from "@/features/teams/types";
-import { useTeamMembers } from "@/features/teams/hooks";
+// import { useTeamMembers } from "@/features/teams/hooks";
 import { useAuth } from "@/features/auth/hooks";
 import { notifications } from "@mantine/notifications";
 import { useTeamTrainings } from '@/features/trainings/hooks'
@@ -65,7 +65,7 @@ export default function TeamPage() {
   const { user } = useAuth();
 
   const vm = useTeamPageVM(teamId, user?.id)
-  const { teamQuery, membersQuery, invitationsQuery, trainingsQuery, onEditTeam, onDeleteTeam, onRemoveMember, onUpdateMemberRole, onDeleteInvitation, onCreateInvitation, createTraining, updateTraining, deleteTraining, isCreatingTraining, isUpdatingTraining, isDeletingTraining } = vm
+  const { teamQuery, membersQuery, invitationsQuery, /*trainingsQuery,*/ onEditTeam, onDeleteTeam, onRemoveMember, onUpdateMemberRole, onDeleteInvitation, onCreateInvitation, createTraining, updateTraining, deleteTraining, isCreatingTraining, isUpdatingTraining, isDeletingTraining } = vm
   const { data: team, isLoading: teamLoading, error: teamError } = teamQuery
   const { data: members, isLoading: membersLoading } = membersQuery
   const { data: invitations, isLoading: invitationsLoading } = invitationsQuery
@@ -538,7 +538,7 @@ export default function TeamPage() {
             <Button variant="outline" onClick={editModalHandlers.close}>
               Отмена
             </Button>
-            <Button onClick={handleEditTeam} loading={updateTeam.isPending}>
+            <Button onClick={handleEditTeam}>
               Сохранить
             </Button>
           </Group>
@@ -562,7 +562,6 @@ export default function TeamPage() {
             <Button
               color="red"
               onClick={handleDeleteTeam}
-              loading={deleteTeam.isPending}
             >
               Удалить
             </Button>
@@ -609,7 +608,7 @@ export default function TeamPage() {
             </Button>
             <Button
               onClick={handleInviteMember}
-              loading={createInvitation.isPending}
+              
               disabled={!inviteForm.email.trim()}
             >
               Отправить приглашение

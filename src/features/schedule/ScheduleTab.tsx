@@ -482,7 +482,7 @@ function RoundResultsTable({ roundId, competitionId, startIso, endIso }: { round
   const { data: usersMap } = useQuery({
     queryKey: ['round-results-users', roundId],
     queryFn: async () => {
-      const ids = Array.from(new Set((results ?? []).map((r) => r.participant_user_id)))
+      const ids = Array.from(new Set((results ?? []).map((r: any) => r.participant_user_id)))
       if (ids.length === 0) return {}
       const { data: users, error } = await supabase.from('users').select('id,email,raw_user_meta_data').in('id', ids)
       if (error) throw error
@@ -510,7 +510,7 @@ function RoundResultsTable({ roundId, competitionId, startIso, endIso }: { round
                 </tr>
               </thead>
               <tbody>
-                {(byZone.get(zid) || []).map((row, idx) => (
+                {(byZone.get(zid) || []).map((row: { userId: string; totalWeight: number; totalCount: number }, idx: number) => (
                   <tr key={row.userId}>
                     <td>{idx + 1}</td>
                     <td>{usersMap?.[row.userId]?.nickname || usersMap?.[row.userId]?.email || row.userId}</td>
