@@ -6,6 +6,7 @@ import { useCompetition, useCompetitionFishKinds } from '@/features/competitions
 import { useCompetitionJudges, useCreateJudgeInvitation, useIsUserJudge } from '@/features/judges/hooks'
 import { useCompetitionParticipants, useCreateResult, useResults, useUpdateResult, useDeleteResult } from '@/features/results/hooks'
 import { useFishKinds } from '@/features/dicts/fish/hooks'
+import { useCompetitionLeagues } from '@/features/leagues/hooks'
 import { TeamsTab } from '@/features/teams/TeamsTab'
 import { ZonesTab } from '@/features/zones/ZonesTab'
 import { ScheduleTab } from '@/features/schedule/ScheduleTab'
@@ -22,6 +23,7 @@ export default function CompetitionPage() {
   const { competitionId } = useParams()
   const { user } = useAuth()
   const { data: competition } = useCompetition(competitionId!)
+  const { data: competitionLeagues } = useCompetitionLeagues(competitionId!)
   const { data: teamSizes } = useTeamSizes()
 
   if (!competitionId) return <Text>Нет соревнования</Text>
@@ -129,6 +131,7 @@ function ResultItem({ result, fishKinds, onSave, onDelete, canEdit }: {
 
 function InfoFromDrawer({ competitionId }: { competitionId: string }) {
   const { data: competition } = useCompetition(competitionId)
+  const { data: competitionLeagues } = useCompetitionLeagues(competitionId)
   const { data: teamSizes } = useTeamSizes()
   const { data: formats } = useCompetitionFormats()
   const { data: fishKindIds } = useCompetitionFishKinds(competitionId)
@@ -150,6 +153,16 @@ function InfoFromDrawer({ competitionId }: { competitionId: string }) {
         )}
         {fishKindIds && fishKindIds.length > 0 && (
           <Text size="sm"><strong>Целевая рыба:</strong> {fishKindIds.join(', ')}</Text>
+        )}
+        {competitionLeagues && competitionLeagues.length > 0 && (
+          <Group gap="xs">
+            <Text size="sm"><strong>Лиги:</strong></Text>
+            {competitionLeagues.map((league) => (
+              <Badge key={league.id} variant="light" color="blue" size="sm">
+                {league.name}
+              </Badge>
+            ))}
+          </Group>
         )}
         {typeof competition?.lat === 'number' && typeof competition?.lng === 'number' && (
           <Text size="sm"><strong>Координаты:</strong> {competition.lat.toFixed(6)}, {competition.lng.toFixed(6)}</Text>

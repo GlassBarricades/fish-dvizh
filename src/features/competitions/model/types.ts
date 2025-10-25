@@ -8,6 +8,8 @@ export type Competition = {
   format_id?: string | null
   team_size_id?: string | null
   max_slots?: number | null
+  league_id?: string | null // Связь с лигой
+  competition_type?: 'regular' | 'championship' | 'qualification' | null // Тип соревнования для множителя
   created_at: string
   created_by?: string | null
 }
@@ -21,6 +23,8 @@ export type CreateCompetitionInput = {
   format_id: string
   team_size_id?: string | null
   max_slots?: number | null
+  league_id?: string | null
+  competition_type?: 'regular' | 'championship' | 'qualification' | null
 }
 
 export type UpdateCompetitionInput = {
@@ -32,6 +36,8 @@ export type UpdateCompetitionInput = {
   format_id?: string | null
   team_size_id?: string | null
   max_slots?: number | null
+  league_id?: string | null
+  competition_type?: 'regular' | 'championship' | 'qualification' | null
 }
 
 export type CompetitionFishKind = {

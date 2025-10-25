@@ -38,6 +38,9 @@ function App() {
                 <NavLink to="/competitions" className={({ isActive }) => isActive ? `${classes.link} ${classes.linkActive}` : classes.link}>
                   Соревнования
                 </NavLink>
+                <NavLink to="/leagues" className={({ isActive }) => isActive ? `${classes.link} ${classes.linkActive}` : classes.link}>
+                  Лиги
+                </NavLink>
                 <NavLink to="/map" className={({ isActive }) => isActive ? `${classes.link} ${classes.linkActive}` : classes.link}>
                   Карта
                 </NavLink>
@@ -85,6 +88,9 @@ function App() {
           </NavLink>
           <NavLink to="/competitions" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
             Соревнования
+          </NavLink>
+          <NavLink to="/leagues" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
+            Лиги
           </NavLink>
           <NavLink to="/map" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
             Карта

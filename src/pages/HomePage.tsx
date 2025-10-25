@@ -1,12 +1,17 @@
 import { Avatar, Badge, Button, Card, Container, Group, Image, Paper, Progress, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core'
 import { useUpcomingCompetitions } from '@/features/competitions/model/hooks'
 import { useAggregatedStandings } from '@/features/results/hooks'
+import { useActiveLeagues } from '@/features/leagues/hooks'
+import { useUnreadNotificationsCount } from '@/features/notifications/model/hooks'
 import { useAuth } from '@/features/auth/hooks'
 import dayjs from 'dayjs'
 
 export default function HomePage() {
   const { user } = useAuth()
   const upcoming = useUpcomingCompetitions(6)
+  const { data: activeLeagues } = useActiveLeagues()
+  const { data: unreadNotificationsData } = useUnreadNotificationsCount(user?.id)
+  const unreadNotificationsCount = unreadNotificationsData?.count || 0
   // Для рейтинга нужен competitionId. Если глобального нет, покажем подсказку.
   // В дальнейшем можно сделать агрегированный кросс-соревновательный рейтинг.
   const someCompetitionId = undefined as unknown as string | undefined
@@ -47,7 +52,19 @@ export default function HomePage() {
       <Stack gap="lg">
         <Paper withBorder radius="md" p="lg">
           <Stack>
-            <Title order={2}>Добро пожаловать в FishDvizh</Title>
+            <Group justify="space-between" align="center">
+              <Title order={2}>Добро пожаловать в FishDvizh</Title>
+              {user && (
+                <Button 
+                  variant="light" 
+                  component="a" 
+                  href="/notifications"
+                  leftSection={<Badge size="sm" color="red" variant="filled">{unreadNotificationsCount}</Badge>}
+                >
+                  Уведомления
+                </Button>
+              )}
+            </Group>
             <Text c="dimmed">Следите за соревнованиями, рейтингами и прогрессом спортсменов.</Text>
           </Stack>
         </Paper>
@@ -82,6 +99,51 @@ export default function HomePage() {
             )}
             {upcoming.data && upcoming.data.length === 0 && (
               <Card withBorder radius="md" p="lg"><Text c="dimmed">Пока нет предстоящих соревнований</Text></Card>
+            )}
+          </SimpleGrid>
+        </Stack>
+
+        <Stack gap="sm">
+          <Group justify="space-between" align="center">
+            <Title order={3}>Активные лиги</Title>
+            <Button variant="subtle" component="a" href="/leagues">Все лиги</Button>
+          </Group>
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+            {(activeLeagues ?? []).slice(0, 3).map((league) => (
+              <Card key={league.id} withBorder radius="md" p="sm" component="a" href={`/league/${league.id}`}>
+                <Card.Section>
+                  <Image src="/placeholder-league.jpg" alt={league.name} h={140} fallbackSrc="/vite.svg" />
+                </Card.Section>
+                <Stack gap={6} mt="sm">
+                  <Group justify="space-between">
+                    <Title order={5}>{league.name}</Title>
+                    <Badge variant="light" color="green">Активна</Badge>
+                  </Group>
+                  <Group gap="xs">
+                    <Badge variant="light" color="blue" size="sm">
+                      {league.season}
+                    </Badge>
+                  </Group>
+                  {league.description && (
+                    <Text size="sm" c="dimmed" lineClamp={2}>{league.description}</Text>
+                  )}
+                  <Group gap="sm" c="dimmed">
+                    <Group gap={4}>
+                      <Text size="xs">
+                        {dayjs(league.start_date).format('DD.MM')} - {dayjs(league.end_date).format('DD.MM.YYYY')}
+                      </Text>
+                    </Group>
+                  </Group>
+                  <Group justify="flex-end">
+                    <Button size="xs" variant="light">Подробнее</Button>
+                  </Group>
+                </Stack>
+              </Card>
+            ))}
+            {activeLeagues && activeLeagues.length === 0 && (
+              <Card withBorder radius="md" p="lg" style={{ gridColumn: '1 / -1' }}>
+                <Text c="dimmed">Пока нет активных лиг</Text>
+              </Card>
             )}
           </SimpleGrid>
         </Stack>

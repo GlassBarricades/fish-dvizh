@@ -1,9 +1,24 @@
 import { Anchor, Badge, Button, Card, Container, Group, Skeleton, Stack, Text, Title } from '@mantine/core'
 import { Link } from 'react-router-dom'
+import { IconDownload } from '@tabler/icons-react'
 import { useCompetitions } from '@/features/competitions/hooks'
+import { useExportCompetitionResults } from '@/features/export/hooks'
 
 export default function CompetitionsPage() {
   const { data, isLoading } = useCompetitions()
+  const exportCompetitionResults = useExportCompetitionResults()
+
+  const handleExportResults = async (competitionId: string) => {
+    await exportCompetitionResults.mutateAsync({
+      competitionId,
+      config: {
+        format: 'csv',
+        includeHeaders: true
+      },
+      includeFishDetails: true,
+      includeZoneDetails: false
+    })
+  }
 
   return (
     <Container size="lg" py="md">
@@ -40,9 +55,20 @@ export default function CompetitionsPage() {
                   <Text size="sm" c="dimmed">Координаты: {c.lat.toFixed(5)}, {c.lng.toFixed(5)}</Text>
                 </Stack>
                 <Stack gap={8} align="flex-end">
-                  <Button size="sm" component={Link} to={`/competition/${c.id}`}>
-                    Открыть
-                  </Button>
+                  <Group gap="xs">
+                    <Button size="sm" component={Link} to={`/competition/${c.id}`}>
+                      Открыть
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="light"
+                      leftSection={<IconDownload size={14} />}
+                      onClick={() => handleExportResults(c.id)}
+                      loading={exportCompetitionResults.isPending}
+                    >
+                      Экспорт
+                    </Button>
+                  </Group>
                   <Anchor size="sm" component={Link} to="/map">Открыть на карте</Anchor>
                 </Stack>
               </Group>

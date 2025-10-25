@@ -31,7 +31,7 @@ const defaultIcon = new L.Icon({
   shadowSize: [41, 41],
 })
 L.Marker.prototype.options.icon = defaultIcon
-import { IconPlus, IconUserPlus, IconCrown, IconUsers } from '@tabler/icons-react'
+import { IconPlus, IconUserPlus, IconCrown, IconUsers, IconTrophy, IconDownload } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useAuth } from '@/features/auth/hooks'
 import { useTeamMembers } from '@/features/teams/hooks'
@@ -40,6 +40,13 @@ import { useNavigate } from 'react-router-dom'
 import { useCatchesByUsers } from '@/features/trainings/hooks'
 import { useFishKinds } from '@/features/dicts/fish/hooks'
 import { useProfilePageVM } from '@/features/profile/model/useProfilePageVM'
+import { useUserInvitations } from '@/features/leagues/model/hooks'
+import { 
+  useUserAchievements, 
+  useUserAchievementsByCategory,
+  useUserRecentAchievements
+} from '@/features/achievements/hooks'
+import { useExportUserStats } from '@/features/export/hooks'
 
 export default function ProfilePage() {
   const { user } = useAuth()
@@ -73,6 +80,19 @@ export default function ProfilePage() {
     removeUserBait,
   } = useProfilePageVM(user?.id)
 
+  // Достижения
+  const { data: achievements } = useUserAchievements(user?.id)
+  const { total: totalAchievements, points: totalPoints } = useUserAchievementsByCategory(user?.id)
+  const { recent } = useUserRecentAchievements(user?.id)
+  const exportUserStats = useExportUserStats()
+
+  // Приглашения в лиги
+  const { data: leagueInvitations, isLoading: leagueInvitationsLoading } = useUserInvitations(user?.email)
+
+  // Состояния для новых функций
+  const [achievementModalOpened, setAchievementModalOpened] = useState(false)
+  const [selectedAchievement, setSelectedAchievement] = useState<any>(null)
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -81,6 +101,67 @@ export default function ProfilePage() {
   const [editingTraining, setEditingTraining] = useState<any>(null)
 
   const navigate = useNavigate()
+
+  // Обработчики для новых функций
+  const handleExportStats = async () => {
+    if (!user?.id) return
+    await exportUserStats.mutateAsync({
+      userId: user.id,
+      config: {
+        format: 'csv',
+        includeHeaders: true
+      },
+      includeAchievements: true,
+      includeRewards: true,
+      includeTrainingData: true
+    })
+  }
+
+  const openAchievementModal = (achievement: any) => {
+    setSelectedAchievement(achievement)
+    setAchievementModalOpened(true)
+  }
+
+  const getRarityColor = (rarity: string) => {
+    switch (rarity) {
+      case 'common': return 'gray'
+      case 'rare': return 'blue'
+      case 'epic': return 'purple'
+      case 'legendary': return 'yellow'
+      default: return 'gray'
+    }
+  }
+
+  const getRarityLabel = (rarity: string) => {
+    switch (rarity) {
+      case 'common': return 'Обычные'
+      case 'rare': return 'Редкие'
+      case 'epic': return 'Эпические'
+      case 'legendary': return 'Легендарные'
+      default: return 'Неизвестно'
+    }
+  }
+
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case 'competition': return 'Соревнования'
+      case 'league': return 'Лига'
+      case 'training': return 'Тренировки'
+      case 'social': return 'Социальные'
+      case 'special': return 'Особые'
+      default: return 'Неизвестно'
+    }
+  }
+
+  const getIconComponent = (iconName: string) => {
+    switch (iconName) {
+      case 'IconTrophy': return <IconTrophy size={20} />
+      case 'IconMedal': return <IconCrown size={20} />
+      case 'IconCrown': return <IconCrown size={20} />
+      case 'IconStar': return <IconTrophy size={20} />
+      default: return <IconTrophy size={20} />
+    }
+  }
 
   if (!user) {
     return (
@@ -174,6 +255,12 @@ export default function ProfilePage() {
               <Badge variant="light" color="blue" size="lg">
                 {user.user_metadata?.role || 'user'}
               </Badge>
+              <Badge variant="light" color="green" size="lg">
+                {totalAchievements} достижений
+              </Badge>
+              <Badge variant="light" color="orange" size="lg">
+                {totalPoints} очков
+              </Badge>
               <Text size="lg">
                 <strong>Email:</strong> {user.email}
               </Text>
@@ -187,6 +274,16 @@ export default function ProfilePage() {
                   <strong>Телефон:</strong> {user.user_metadata.phone}
                 </Text>
               )}
+            </Group>
+            <Group justify="flex-end">
+              <Button
+                variant="light"
+                leftSection={<IconDownload size={16} />}
+                onClick={handleExportStats}
+                loading={exportUserStats.isPending}
+              >
+                Экспорт статистики
+              </Button>
             </Group>
           </Stack>
         </Paper>
@@ -203,6 +300,9 @@ export default function ProfilePage() {
               </Tabs.Tab>
               <Tabs.Tab value="trainings">Личные тренировки</Tabs.Tab>
               <Tabs.Tab value="baits">Мои приманки</Tabs.Tab>
+              <Tabs.Tab value="achievements" leftSection={<IconTrophy size={16} />}>
+                Достижения
+              </Tabs.Tab>
             </Tabs.List>
 
             <Tabs.Panel value="my-teams" pt="md">
@@ -338,6 +438,69 @@ export default function ProfilePage() {
                     У вас нет активных приглашений
                   </Text>
                 )}
+                
+                <Title order={3}>Приглашения в лиги</Title>
+                
+                {leagueInvitationsLoading ? (
+                  <Text>Загрузка приглашений в лиги...</Text>
+                ) : leagueInvitations && leagueInvitations.length > 0 ? (
+                  <Stack gap="md">
+                    {leagueInvitations.map((invitation) => {
+                      const isExpired = new Date(invitation.expires_at) < new Date()
+                      const league = (invitation as any).leagues
+                      
+                      return (
+                        <Paper key={invitation.id} p="md" withBorder>
+                          <Group justify="space-between" mb="xs">
+                            <Stack gap="xs">
+                              <Text fw={500}>
+                                Приглашение в лигу "{league?.name || 'Неизвестная лига'}"
+                              </Text>
+                              {league?.description && (
+                                <Text size="sm" c="dimmed">
+                                  {league.description}
+                                </Text>
+                              )}
+                              <Text size="sm" c="dimmed">
+                                Сезон: {league?.season || 'Не указан'}
+                              </Text>
+                              <Text size="xs" c="dimmed">
+                                Приглашение отправлено {new Date(invitation.created_at).toLocaleDateString('ru-RU')}
+                              </Text>
+                              <Text size="xs" c={isExpired ? 'red' : 'dimmed'}>
+                                Истекает: {new Date(invitation.expires_at).toLocaleDateString('ru-RU')}
+                              </Text>
+                            </Stack>
+                            <Group gap="xs">
+                              {invitation.status === 'pending' && !isExpired ? (
+                                <>
+                                  <Button 
+                                    size="sm" 
+                                    color="green"
+                                    onClick={() => window.open(`/invitation/${invitation.token}`, '_blank')}
+                                  >
+                                    Открыть приглашение
+                                  </Button>
+                                </>
+                              ) : invitation.status === 'accepted' ? (
+                                <Badge color="green">Принято</Badge>
+                              ) : invitation.status === 'declined' ? (
+                                <Badge color="red">Отклонено</Badge>
+                              ) : isExpired ? (
+                                <Badge color="gray">Истекло</Badge>
+                              ) : null}
+                            </Group>
+                          </Group>
+                        </Paper>
+                      )
+                    })}
+                  </Stack>
+                ) : (
+                  <Text c="dimmed" ta="center" py="xl">
+                    У вас нет приглашений в лиги
+                  </Text>
+                )}
+                
                 <Title order={3}>Приглашения судьи</Title>
                 <Stack gap="md">
                   {(judgeInvites ?? []).length === 0 && (
@@ -471,6 +634,91 @@ export default function ProfilePage() {
                 </Card>
               </Stack>
             </Tabs.Panel>
+
+            <Tabs.Panel value="achievements" pt="md">
+              <Stack gap="md">
+                <Title order={3}>Мои достижения</Title>
+                
+                {/* Последние достижения */}
+                <Card withBorder p="md">
+                  <Title order={4} mb="xs">Последние достижения</Title>
+                  {recent.length > 0 ? (
+                    <Stack gap="xs">
+                      {recent.slice(0, 5).map((achievement: any) => (
+                        <Group key={achievement.id} gap="sm" p="xs" style={{ borderRadius: 8, background: 'rgba(0,0,0,0.02)' }}>
+                          <Badge 
+                            variant="light" 
+                            color={getRarityColor(achievement.achievements?.rarity)}
+                            size="lg"
+                          >
+                            {getIconComponent(achievement.achievements?.icon)}
+                          </Badge>
+                          <Stack gap={2} style={{ flex: 1 }}>
+                            <Text fw={500} size="sm">{achievement.achievements?.name}</Text>
+                            <Text size="xs" c="dimmed">
+                              {new Date(achievement.earned_at).toLocaleDateString()}
+                            </Text>
+                          </Stack>
+                          <Button
+                            size="xs"
+                            variant="light"
+                            onClick={() => openAchievementModal(achievement)}
+                          >
+                            Подробнее
+                          </Button>
+                        </Group>
+                      ))}
+                    </Stack>
+                  ) : (
+                    <Text c="dimmed">Пока нет достижений</Text>
+                  )}
+                </Card>
+
+                {/* Все достижения */}
+                <Card withBorder p="md">
+                  <Title order={4} mb="xs">Все достижения</Title>
+                  {achievements && achievements.length > 0 ? (
+                    <Stack gap="sm">
+                      {achievements.map((achievement: any) => (
+                        <Group key={achievement.id} gap="sm" p="sm" style={{ borderRadius: 8, background: 'rgba(0,0,0,0.02)' }}>
+                          <Badge 
+                            variant="light" 
+                            color={getRarityColor(achievement.achievements?.rarity)}
+                            size="lg"
+                          >
+                            {getIconComponent(achievement.achievements?.icon)}
+                          </Badge>
+                          <Stack gap={2} style={{ flex: 1 }}>
+                            <Group gap="xs">
+                              <Text fw={500}>{achievement.achievements?.name}</Text>
+                              <Badge variant="light" color={getRarityColor(achievement.achievements?.rarity)} size="xs">
+                                {getRarityLabel(achievement.achievements?.rarity)}
+                              </Badge>
+                              <Badge variant="light" color="blue" size="xs">
+                                {getCategoryLabel(achievement.achievements?.category)}
+                              </Badge>
+                            </Group>
+                            <Text size="sm" c="dimmed">
+                              {achievement.achievements?.description}
+                            </Text>
+                            <Group gap="sm">
+                              <Text size="sm" fw={500}>
+                                {achievement.achievements?.points} очков
+                              </Text>
+                              <Text size="xs" c="dimmed">
+                                {new Date(achievement.earned_at).toLocaleDateString()}
+                              </Text>
+                            </Group>
+                          </Stack>
+                        </Group>
+                      ))}
+                    </Stack>
+                  ) : (
+                    <Text c="dimmed">Пока нет достижений</Text>
+                  )}
+                </Card>
+              </Stack>
+            </Tabs.Panel>
           </Tabs>
         </Paper>
       </Stack>
@@ -522,6 +770,48 @@ export default function ProfilePage() {
             onEdit={handleEditTraining}
             isSubmitting={isUpdatingTraining}
           />
+        )}
+      </Modal>
+
+      {/* Модальное окно с деталями достижения */}
+      <Modal
+        opened={achievementModalOpened}
+        onClose={() => setAchievementModalOpened(false)}
+        title={selectedAchievement?.achievements?.name}
+        centered
+      >
+        {selectedAchievement && (
+          <Stack gap="md">
+            <Group justify="center">
+              <Badge 
+                size="xl" 
+                variant="light" 
+                color={getRarityColor(selectedAchievement.achievements?.rarity)}
+              >
+                {getIconComponent(selectedAchievement.achievements?.icon)}
+              </Badge>
+            </Group>
+            
+            <Stack align="center" gap="xs">
+              <Badge variant="light" color={getRarityColor(selectedAchievement.achievements?.rarity)}>
+                {getRarityLabel(selectedAchievement.achievements?.rarity)}
+              </Badge>
+              <Badge variant="light" color="blue">
+                {getCategoryLabel(selectedAchievement.achievements?.category)}
+              </Badge>
+            </Stack>
+
+            <Text ta="center" c="dimmed">
+              {selectedAchievement.achievements?.description}
+            </Text>
+
+            <Group justify="space-between">
+              <Text fw={500}>Очки: {selectedAchievement.achievements?.points}</Text>
+              <Text size="sm" c="dimmed">
+                Получено: {new Date(selectedAchievement.earned_at).toLocaleDateString()}
+              </Text>
+            </Group>
+          </Stack>
         )}
       </Modal>
     </Container>

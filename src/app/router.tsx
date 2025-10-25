@@ -26,6 +26,15 @@ const ScoreboardPage = lazy(() => import('@/pages/ScoreboardPage'))
 const ResultsPublicPage = lazy(() => import('@/pages/ResultsPublicPage'))
 const JudgePage = lazy(() => import('@/pages/JudgePage'))
 const LeaderboardPage = lazy(() => import('@/pages/LeaderboardPage'))
+const LeaguesPage = lazy(() => import('@/pages/LeaguesPage'))
+const LeaguePage = lazy(() => import('@/pages/LeaguePage'))
+const LeagueAdminPage = lazy(() => import('@/pages/LeagueAdminPage'))
+const InvitationPage = lazy(() => import('@/pages/InvitationPage'))
+const RatingConfigsPage = lazy(() => import('@/pages/RatingConfigsPage'))
+const AchievementsPage = lazy(() => import('@/pages/AchievementsPage'))
+const NotificationsPage = lazy(() => import('@/pages/NotificationsPage'))
+const ExportPage = lazy(() => import('@/pages/ExportPage'))
+const BonusesPage = lazy(() => import('@/pages/BonusesPage'))
 
 export const router = createBrowserRouter([
   {
@@ -39,7 +48,11 @@ export const router = createBrowserRouter([
       { index: true, element: <Suspense fallback={null}><HomePage /></Suspense> },
       { path: 'map', element: <Suspense fallback={null}><MapPage /></Suspense> },
       { path: 'competitions', element: <Suspense fallback={null}><CompetitionsPage /></Suspense> },
+      { path: 'leagues', element: <Suspense fallback={null}><LeaguesPage /></Suspense> },
+      { path: 'league/:leagueId', element: <Suspense fallback={null}><LeaguePage /></Suspense> },
+      { path: 'invitation/:token', element: <Suspense fallback={null}><InvitationPage /></Suspense> },
       { path: 'profile', element: <Suspense fallback={null}><ProfilePage /></Suspense> },
+      { path: 'notifications', element: <Suspense fallback={null}><NotificationsPage /></Suspense> },
       { path: 'leaderboard', element: <Suspense fallback={null}><LeaderboardPage /></Suspense> },
       { path: 'team/:teamId', element: <Suspense fallback={null}><TeamPage /></Suspense> },
       { path: 'competition/:competitionId', element: <Suspense fallback={null}><CompetitionPage /></Suspense> },
@@ -56,6 +69,11 @@ export const router = createBrowserRouter([
           { path: 'dicts/bait-manufacturers', element: <Suspense fallback={null}><BaitManufacturersPage /></Suspense> },
           { path: 'dicts/bait-types', element: <Suspense fallback={null}><BaitTypesPage /></Suspense> },
           { path: 'dicts/baits', element: <Suspense fallback={null}><BaitsPage /></Suspense> },
+          { path: 'rating-configs', element: <Suspense fallback={null}><RatingConfigsPage /></Suspense> },
+          { path: 'achievements', element: <Suspense fallback={null}><AchievementsPage /></Suspense> },
+          { path: 'bonuses', element: <Suspense fallback={null}><BonusesPage /></Suspense> },
+          { path: 'export', element: <Suspense fallback={null}><ExportPage /></Suspense> },
+          { path: 'league/:leagueId', element: <Suspense fallback={null}><LeagueAdminPage /></Suspense> },
         ],
       },
     ],

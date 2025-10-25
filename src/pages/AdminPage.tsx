@@ -22,6 +22,11 @@ export default function AdminPage() {
           <Paper withBorder radius="md" p="md" w={260} visibleFrom="sm">
             <Stack gap="xs">
               <NavLink component={Link} to="/admin/users" label="Пользователи" active={active('/admin/users')} />
+              <NavLink component={Link} to="/admin/rating-configs" label="Конфигурации рейтинга" active={active('/admin/rating-configs')} />
+              <NavLink component={Link} to="/admin/achievements" label="Достижения и награды" active={active('/admin/achievements')} />
+              <NavLink component={Link} to="/admin/bonuses" label="Бонусы и правила" active={active('/admin/bonuses')} />
+              <NavLink component={Link} to="/admin/export" label="Экспорт данных" active={active('/admin/export')} />
+              <NavLink component={Link} to="/leagues" label="Лиги" active={active('/leagues')} />
               <NavLink component={Link} to="/admin/dicts" label="Справочники">
                 <NavLink component={Link} to="/admin/dicts/fish" label="Виды рыбы" active={active('/admin/dicts/fish')} />
                 <NavLink component={Link} to="/admin/dicts/bait-manufacturers" label="Производители приманок" active={active('/admin/dicts/bait-manufacturers')} />
@@ -42,6 +47,11 @@ export default function AdminPage() {
       <Drawer opened={mobileOpened} onClose={closeMobile} title="Меню" size={280} padding="md" hiddenFrom="sm">
         <Stack gap="xs">
           <NavLink component={Link} to="/admin/users" label="Пользователи" active={active('/admin/users')} onClick={closeMobile} />
+          <NavLink component={Link} to="/admin/rating-configs" label="Конфигурации рейтинга" active={active('/admin/rating-configs')} onClick={closeMobile} />
+          <NavLink component={Link} to="/admin/achievements" label="Достижения и награды" active={active('/admin/achievements')} onClick={closeMobile} />
+          <NavLink component={Link} to="/admin/bonuses" label="Бонусы и правила" active={active('/admin/bonuses')} onClick={closeMobile} />
+          <NavLink component={Link} to="/admin/export" label="Экспорт данных" active={active('/admin/export')} onClick={closeMobile} />
+          <NavLink component={Link} to="/leagues" label="Лиги" active={active('/leagues')} onClick={closeMobile} />
           <NavLink component={Link} to="/admin/dicts" label="Справочники">
             <NavLink component={Link} to="/admin/dicts/fish" label="Виды рыбы" active={active('/admin/dicts/fish')} onClick={closeMobile} />
             <NavLink component={Link} to="/admin/dicts/bait-manufacturers" label="Производители приманок" active={active('/admin/dicts/bait-manufacturers')} onClick={closeMobile} />

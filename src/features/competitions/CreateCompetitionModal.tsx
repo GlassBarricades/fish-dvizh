@@ -6,6 +6,7 @@ import { useCreateCompetition, useSetCompetitionFishKinds } from './model/hooks'
 import { useFishKinds } from '../dicts/fish/hooks'
 import { useCompetitionFormats } from '../dicts/formats/hooks'
 import { useTeamSizes } from '../dicts/teamSizes/hooks'
+import { useActiveLeagues } from '../leagues/hooks'
 import { notifications } from '@mantine/notifications'
 
 type Props = {
@@ -23,10 +24,13 @@ export function CreateCompetitionModal({ lat, lng, onClose }: Props) {
   const { data: fishKinds } = useFishKinds()
   const { data: formats } = useCompetitionFormats()
   const { data: teamSizes } = useTeamSizes()
+  const { data: activeLeagues } = useActiveLeagues()
   const [fishKindIds, setFishKindIds] = useState<string[]>([])
   const [formatId, setFormatId] = useState<string | null>(null)
   const [teamSizeId, setTeamSizeId] = useState<string | null>(null)
   const [maxSlots, setMaxSlots] = useState<number | ''>('')
+  const [leagueId, setLeagueId] = useState<string | null>(null)
+  const [competitionType, setCompetitionType] = useState<'regular' | 'championship' | 'qualification' | null>(null)
 
   async function handleSubmit() {
     if (!title.trim() || !startsAt || fishKindIds.length === 0 || !formatId || !teamSizeId) {
@@ -43,6 +47,8 @@ export function CreateCompetitionModal({ lat, lng, onClose }: Props) {
         format_id: formatId,
         team_size_id: teamSizeId,
         max_slots: maxSlots === '' ? null : Number(maxSlots),
+        league_id: leagueId,
+        competition_type: competitionType,
       })
       await setFishKinds({ competitionId: created.id, fishKindIds })
       notifications.show({ color: 'green', message: 'Соревнование создано' })
@@ -82,6 +88,33 @@ export function CreateCompetitionModal({ lat, lng, onClose }: Props) {
         nothingFoundMessage="Нет данных"
         required
       />
+      <Select
+        label="Лига (необязательно)"
+        placeholder="Выберите лигу"
+        data={[
+          { value: '', label: 'Без лиги' },
+          ...(activeLeagues ?? []).map((l) => ({ value: l.id, label: l.name }))
+        ]}
+        value={leagueId}
+        onChange={(value) => setLeagueId(value || null)}
+        searchable
+        nothingFoundMessage="Нет активных лиг"
+        clearable
+      />
+      {leagueId && (
+        <Select
+          label="Тип соревнования"
+          placeholder="Выберите тип"
+          data={[
+            { value: 'regular', label: 'Обычное соревнование' },
+            { value: 'championship', label: 'Чемпионат' },
+            { value: 'qualification', label: 'Квалификация' }
+          ]}
+          value={competitionType}
+          onChange={(value) => setCompetitionType(value as any)}
+          required
+        />
+      )}
       <Textarea label="Описание" value={description} onChange={(e) => setDescription(e.currentTarget.value)} minRows={3} />
       <NumberInput
         label={teamSizes?.find((s) => s.id === teamSizeId)?.size === 1 ? 'Лимит участников (соло)' : 'Лимит команд'}
