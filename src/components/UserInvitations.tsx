@@ -14,8 +14,7 @@ import {
   Tooltip,
   Modal,
   Alert,
-  Title,
-  Box
+  Title
 } from '@mantine/core'
 import {
   IconMail,
@@ -25,7 +24,6 @@ import {
   IconAlertCircle,
   IconExternalLink
 } from '@tabler/icons-react'
-import { notifications } from '@mantine/notifications'
 import { useAuth } from '@/features/auth/hooks'
 import { useLeagueInvitations } from '@/features/leagues/model/hooks'
 import dayjs from 'dayjs'
@@ -217,7 +215,6 @@ export function UserInvitations({ leagueId, showAll = false }: UserInvitationsPr
                     <Alert
                       icon={<IconAlertCircle size={16} />}
                       color="red"
-                      size="sm"
                     >
                       Приглашение истекло
                     </Alert>

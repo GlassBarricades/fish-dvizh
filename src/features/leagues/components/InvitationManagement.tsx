@@ -18,8 +18,7 @@ import {
   Divider,
   Paper,
   Title,
-  Box,
-  Tabs
+  Box
 } from '@mantine/core'
 import {
   IconMail,

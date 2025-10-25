@@ -18,12 +18,6 @@ import {
   sendBulkInvitationEmails,
   getNotificationStats
 } from '../api/api'
-import type {
-  Notification,
-  EmailTemplate,
-  CreateNotificationInput,
-  SendEmailInput
-} from '../api/api'
 
 // Получение уведомлений пользователя
 export function useUserNotifications(userId: string | undefined) {
@@ -49,7 +43,7 @@ export function useCreateNotification() {
   
   return useMutation({
     mutationFn: createNotification,
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       queryClient.invalidateQueries({ queryKey: ['user-notifications'] })
       queryClient.invalidateQueries({ queryKey: ['league-notifications'] })
       notifications.show({
@@ -74,13 +68,13 @@ export function useCreateBulkNotifications() {
   
   return useMutation({
     mutationFn: createBulkNotifications,
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       queryClient.invalidateQueries({ queryKey: ['user-notifications'] })
       queryClient.invalidateQueries({ queryKey: ['league-notifications'] })
       notifications.show({
         color: 'green',
         title: 'Уведомления созданы',
-        message: `Создано ${data.length} уведомлений`
+        message: `Создано ${_data.length} уведомлений`
       })
     },
     onError: (error: any) => {
@@ -100,7 +94,7 @@ export function useUpdateNotificationStatus() {
   return useMutation({
     mutationFn: ({ notificationId, status, sentAt }: {
       notificationId: string
-      status: Notification['status']
+      status: 'sent' | 'failed' | 'delivered'
       sentAt?: string
     }) => updateNotificationStatus(notificationId, status, sentAt),
     onSuccess: () => {
@@ -215,13 +209,13 @@ export function useSendBulkInvitationEmails() {
       invitations: Array<{ email: string; token: string }>
       leagueId: string
     }) => sendBulkInvitationEmails(invitations, leagueId),
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       queryClient.invalidateQueries({ queryKey: ['user-notifications'] })
       queryClient.invalidateQueries({ queryKey: ['league-notifications'] })
       notifications.show({
         color: 'green',
         title: 'Приглашения отправлены',
-        message: `Отправлено ${data.success} приглашений${data.errors.length > 0 ? `, ${data.errors.length} ошибок` : ''}`
+        message: `Отправлено ${_data.success} приглашений${_data.errors.length > 0 ? `, ${_data.errors.length} ошибок` : ''}`
       })
     },
     onError: (error: any) => {

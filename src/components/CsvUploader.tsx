@@ -11,7 +11,6 @@ import {
   Alert,
   Table,
   Badge,
-  Progress,
   FileInput,
   Divider,
   Title,
@@ -36,10 +35,9 @@ interface CsvRow {
 interface CsvUploaderProps {
   onUpload: (data: CsvRow[]) => Promise<void>
   isLoading?: boolean
-  templateUrl?: string
 }
 
-export function CsvUploader({ onUpload, isLoading = false, templateUrl }: CsvUploaderProps) {
+export function CsvUploader({ onUpload, isLoading = false }: CsvUploaderProps) {
   const [csvData, setCsvData] = useState<CsvRow[]>([])
   const [errors, setErrors] = useState<string[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
@@ -188,7 +186,6 @@ export function CsvUploader({ onUpload, isLoading = false, templateUrl }: CsvUpl
         </Group>
 
         <FileInput
-          ref={fileInputRef}
           label="Выберите CSV файл"
           placeholder="Выберите файл..."
           accept=".csv"

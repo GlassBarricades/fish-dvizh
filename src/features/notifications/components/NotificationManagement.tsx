@@ -11,12 +11,8 @@ import {
   Text,
   Badge,
   Table,
-  ActionIcon,
-  Tooltip,
   Alert,
   Divider,
-  Paper,
-  Box,
   Tabs,
   TextInput,
   Textarea,
@@ -29,8 +25,6 @@ import {
   IconMail,
   IconSend,
   IconEye,
-  IconTrash,
-  IconRefresh,
   IconTemplate,
   IconChartBar,
   IconAlertCircle,
@@ -46,7 +40,6 @@ import {
   useCreateNotification,
   useEmailTemplates,
   useUpsertEmailTemplate,
-  useSendEmail,
   useNotificationStats
 } from '../model/hooks'
 import dayjs from 'dayjs'
@@ -67,7 +60,6 @@ export function NotificationManagement({ leagueId, opened, onClose }: Notificati
   
   const createNotification = useCreateNotification()
   const upsertTemplate = useUpsertEmailTemplate()
-  const sendEmail = useSendEmail()
 
   // Форма для отправки уведомления
   const notificationForm = useForm({
