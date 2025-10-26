@@ -192,7 +192,7 @@ export default function LeaguePage() {
   }
 
   const userStats = rating?.find(stats => stats.user_id === user?.id)
-  const userRank = rating?.findIndex(stats => stats.user_id === user?.id) + 1
+  const userRank = rating ? (rating.findIndex(stats => stats.user_id === user?.id) + 1) || 0 : 0
 
   return (
     <Container size="lg" py="md">
