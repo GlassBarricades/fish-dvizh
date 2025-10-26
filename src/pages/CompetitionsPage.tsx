@@ -1,12 +1,33 @@
-import { Anchor, Badge, Button, Card, Container, Group, Skeleton, Stack, Text, Title } from '@mantine/core'
+import { Anchor, Badge, Button, Card, Container, Group, Paper, Skeleton, Stack, Text, Title, SegmentedControl } from '@mantine/core'
 import { Link } from 'react-router-dom'
 import { IconDownload } from '@tabler/icons-react'
+import { useState, useMemo } from 'react'
 import { useCompetitions } from '@/features/competitions/hooks'
 import { useExportCompetitionResults } from '@/features/export/hooks'
 
 export default function CompetitionsPage() {
   const { data, isLoading } = useCompetitions()
   const exportCompetitionResults = useExportCompetitionResults()
+  
+  // Фильтр по статусу соревнований
+  const [filter, setFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming')
+  
+  // Фильтрация соревнований
+  const filteredCompetitions = useMemo(() => {
+    if (!data) return []
+    
+    const now = new Date().getTime()
+    
+    switch (filter) {
+      case 'upcoming':
+        return data.filter(c => new Date(c.starts_at).getTime() > now)
+      case 'past':
+        return data.filter(c => new Date(c.starts_at).getTime() <= now)
+      case 'all':
+      default:
+        return data
+    }
+  }, [data, filter])
 
   const handleExportResults = async (competitionId: string) => {
     await exportCompetitionResults.mutateAsync({
@@ -22,11 +43,30 @@ export default function CompetitionsPage() {
 
   return (
     <Container size="lg" py="md">
-      <Stack>
+      <Stack gap="md">
         <Group justify="space-between" align="center">
           <Title order={2}>Соревнования</Title>
           <Button component={Link} to="/map" variant="light">Открыть карту</Button>
         </Group>
+
+        {/* Фильтр */}
+        <Paper withBorder radius="md" p="md">
+          <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+            <Text size="sm" fw={500}>Фильтр соревнований:</Text>
+            <SegmentedControl
+              value={filter}
+              onChange={(value) => setFilter(value as 'upcoming' | 'past' | 'all')}
+              data={[
+                { label: 'Предстоящие', value: 'upcoming' },
+                { label: 'Прошедшие', value: 'past' },
+                { label: 'Все', value: 'all' },
+              ]}
+            />
+            <Text size="xs" c="dimmed">
+              Найдено: {filteredCompetitions.length}
+            </Text>
+          </Group>
+        </Paper>
 
         {isLoading && (
           <Stack>
@@ -36,12 +76,12 @@ export default function CompetitionsPage() {
           </Stack>
         )}
 
-        {!isLoading && (!data || data.length === 0) && (
+        {!isLoading && (!filteredCompetitions || filteredCompetitions.length === 0) && (
           <Text c="dimmed">Пока нет соревнований.</Text>
         )}
 
         <Stack>
-          {data?.map((c) => (
+          {filteredCompetitions?.map((c) => (
             <Card key={c.id} withBorder radius="md" p="md">
               <Group justify="space-between" align="flex-start">
                 <Stack gap={4}>

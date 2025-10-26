@@ -1,10 +1,11 @@
-import { AppShell, Group, Burger, Button, ActionIcon, useMantineColorScheme, Text, Badge, Stack, Divider } from '@mantine/core'
+import { AppShell, Group, Burger, Button, ActionIcon, useMantineColorScheme, Text, Stack, Divider } from '@mantine/core'
 import classes from './App.module.css';
 import { useDisclosure } from '@mantine/hooks';
 import { useAuth } from '@/features/auth/hooks'
 import { supabase } from '@/lib/supabaseClient'
 import { IconMoon, IconSun } from '@tabler/icons-react'
 import { NavLink, Outlet } from 'react-router-dom'
+import { UserMenu } from '@/components/UserMenu'
 
 function App() {
   const [opened, { toggle }] = useDisclosure();
@@ -44,8 +45,11 @@ function App() {
                 <NavLink to="/map" className={({ isActive }) => isActive ? `${classes.link} ${classes.linkActive}` : classes.link}>
                   Карта
                 </NavLink>
-                <NavLink to="/profile" className={({ isActive }) => isActive ? `${classes.link} ${classes.linkActive}` : classes.link}>
-                  Профиль
+                <NavLink to="/users" className={({ isActive }) => isActive ? `${classes.link} ${classes.linkActive}` : classes.link}>
+                  Пользователи
+                </NavLink>
+                <NavLink to="/teams-list" className={({ isActive }) => isActive ? `${classes.link} ${classes.linkActive}` : classes.link}>
+                  Команды
                 </NavLink>
                 {user?.user_metadata?.role === 'admin' && (
                   <NavLink to="/admin" className={({ isActive }) => isActive ? `${classes.link} ${classes.linkActive}` : classes.link}>
@@ -54,13 +58,7 @@ function App() {
                 )}
               </Group>
               {user ? (
-                <>
-                  <Badge variant="light" color="gray" mr="sm">
-                    {(user as any)?.user_metadata?.role ?? 'user'}
-                  </Badge>
-                  <Text size="sm" c="dimmed" mx="md">{user.email}</Text>
-                  <Button variant="light" onClick={() => supabase.auth.signOut()}>Выйти</Button>
-                </>
+                <UserMenu user={user} />
               ) : (
                 <Button component="a" href="/auth" variant="light">Войти</Button>
               )}
@@ -95,8 +93,11 @@ function App() {
           <NavLink to="/map" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
             Карта
           </NavLink>
-          <NavLink to="/profile" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
-            Профиль
+          <NavLink to="/users" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
+            Пользователи
+          </NavLink>
+          <NavLink to="/teams-list" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
+            Команды
           </NavLink>
           {user?.user_metadata?.role === 'admin' && (
             <NavLink to="/admin" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
@@ -104,11 +105,27 @@ function App() {
             </NavLink>
           )}
           <Divider my="sm" />
+          <NavLink to="/profile/settings" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
+            Профиль
+          </NavLink>
+          <NavLink to="/profile/teams" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
+            Мои команды
+          </NavLink>
+          <NavLink to="/profile/invitations" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
+            Приглашения
+          </NavLink>
+          <NavLink to="/profile/trainings" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
+            Тренировки
+          </NavLink>
+          <NavLink to="/profile/baits" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
+            Приманки
+          </NavLink>
+          <NavLink to="/profile/achievements" onClick={toggle} className={({ isActive }) => isActive ? `${classes.mobileLink} ${classes.linkActive}` : classes.mobileLink}>
+            Достижения
+          </NavLink>
+          <Divider my="sm" />
           {user ? (
-            <>
-              <Text size="sm" c="dimmed" px="md">{user.email}</Text>
-              <Button variant="light" mx="md" onClick={() => { toggle(); supabase.auth.signOut() }}>Выйти</Button>
-            </>
+            <Button variant="light" mx="md" color="red" onClick={() => { toggle(); supabase.auth.signOut() }}>Выйти</Button>
           ) : (
             <Button variant="light" mx="md" component="a" href="/auth" onClick={toggle}>Войти</Button>
           )}

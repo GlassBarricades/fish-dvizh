@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { Button, Container, Group, Paper, PasswordInput, Stack, Text, TextInput, Title, Tabs } from '@mantine/core'
+import { DateInput } from '@mantine/dates'
 import { notifications } from '@mantine/notifications'
 import { useNavigate, useLocation } from 'react-router-dom'
 
@@ -11,8 +12,9 @@ export default function AuthPage() {
   // sign up
   const [regEmail, setRegEmail] = useState('')
   const [regPassword, setRegPassword] = useState('')
-  const [nickname, setNickname] = useState('')
-  const [role, setRole] = useState<'organizer' | 'user'>('user')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [birthDate, setBirthDate] = useState<string | null>('')
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
@@ -35,15 +37,22 @@ export default function AuthPage() {
   async function handleSignUp() {
     try {
       setLoading(true)
-      if (!nickname.trim()) throw new Error('Укажите никнейм')
+      if (!firstName.trim()) throw new Error('Укажите имя')
+      if (!lastName.trim()) throw new Error('Укажите фамилию')
+      if (!birthDate || !birthDate.trim()) throw new Error('Укажите дату рождения')
+      if (!regEmail.trim()) throw new Error('Укажите email')
+      if (!regPassword.trim()) throw new Error('Укажите пароль')
+      
       const { error } = await supabase.auth.signUp({
         email: regEmail,
         password: regPassword,
         options: {
           data: {
-            nickname: nickname.trim(),
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            birth_date: birthDate,
             phone: phone.trim() || undefined,
-            role,
+            role: 'user',
           },
         },
       })
@@ -87,15 +96,19 @@ export default function AuthPage() {
             </Tabs.Panel>
             <Tabs.Panel value="sign-up" pt="md">
               <Stack>
-                <TextInput label="Никнейм" value={nickname} onChange={(e) => setNickname(e.currentTarget.value)} required />
-                <TextInput label="Телефон (опционально)" value={phone} onChange={(e) => setPhone(e.currentTarget.value)} />
-                <TextInput label="Email" value={regEmail} onChange={(e) => setRegEmail(e.currentTarget.value)} />
-                <PasswordInput label="Пароль" value={regPassword} onChange={(e) => setRegPassword(e.currentTarget.value)} />
-                <Text size="sm" c="dimmed">Роль (по умолчанию «user», «organizer» для организаторов)</Text>
-                <Group>
-                  <Button size="xs" variant={role === 'user' ? 'filled' : 'light'} onClick={() => setRole('user')}>user</Button>
-                  <Button size="xs" variant={role === 'organizer' ? 'filled' : 'light'} onClick={() => setRole('organizer')}>organizer</Button>
-                </Group>
+                <TextInput label="Имя" value={firstName} onChange={(e) => setFirstName(e.currentTarget.value)} required />
+                <TextInput label="Фамилия" value={lastName} onChange={(e) => setLastName(e.currentTarget.value)} required />
+                                 <DateInput 
+                   label="Дата рождения" 
+                   value={birthDate} 
+                   onChange={setBirthDate}
+                   placeholder="Выберите дату"
+                   required
+                   maxDate={new Date()}
+                 />
+                 <TextInput label="Телефон (опционально)" value={phone} onChange={(e) => setPhone(e.currentTarget.value)} />
+                <TextInput label="Email" value={regEmail} onChange={(e) => setRegEmail(e.currentTarget.value)} required />
+                <PasswordInput label="Пароль" value={regPassword} onChange={(e) => setRegPassword(e.currentTarget.value)} required />
                 <Group>
                   <Button variant="light" onClick={handleSignUp} loading={loading}>
                     Регистрация

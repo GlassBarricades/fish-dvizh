@@ -1,8 +1,8 @@
-import { Button, Container, Group, Paper, Stack, Text, Drawer, Title, Tabs } from '@mantine/core'
+import { Button, Container, Group, Paper, Stack, Text, Drawer, Title, Tabs, SegmentedControl } from '@mantine/core'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import L, { type LatLngExpression } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { modals } from '@mantine/modals'
 import { CreateCompetitionModal } from '@/features/competitions/CreateCompetitionModal'
 import { EditCompetitionModal } from '@/features/competitions/EditCompetitionModal'
@@ -48,8 +48,32 @@ export default function MapPage() {
   const { data: competitions } = useCompetitions()
   const { data: formats } = useCompetitionFormats()
   const { mutateAsync: deleteCompetition } = useDeleteCompetition()
-  const { user } = useAuth()
+  const { user, role } = useAuth()
   const { data: teamSizes } = useTeamSizes()
+  
+  // Проверка, может ли пользователь создавать соревнования
+  const canCreateCompetition = role === 'admin' || role === 'organizer'
+  
+  // Фильтр по статусу соревнований
+  const [filter, setFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming')
+  
+  // Фильтрация соревнований
+  const filteredCompetitions = useMemo(() => {
+    if (!competitions) return []
+    
+    const now = new Date().getTime()
+    
+    switch (filter) {
+      case 'upcoming':
+        return competitions.filter(c => new Date(c.starts_at).getTime() > now)
+      case 'past':
+        return competitions.filter(c => new Date(c.starts_at).getTime() <= now)
+      case 'all':
+      default:
+        return competitions
+    }
+  }, [competitions, filter])
+  
   const [tempMarker, setTempMarker] = useState<L.LatLng | null>(null)
   const [drawerOpened, { open: openDrawer, close: closeDrawer }] = useDisclosure(false)
   const [editingCompetition, setEditingCompetition] = useState<Competition | null>(null)
@@ -97,13 +121,39 @@ export default function MapPage() {
   }
   return (
     <Container fluid py="md">
-      <Paper withBorder radius="md" p="sm" style={{ position: 'relative' }}>
-        <MapContainer center={MINSK} zoom={12} style={{ height: 700, width: '100%', zIndex: 1 }}>
+      <Stack gap="md">
+        {/* Фильтр */}
+        <Paper withBorder radius="md" p="md">
+          <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+            <Text size="sm" fw={500}>Фильтр соревнований:</Text>
+            <SegmentedControl
+              value={filter}
+              onChange={(value) => setFilter(value as 'upcoming' | 'past' | 'all')}
+              data={[
+                { label: 'Предстоящие', value: 'upcoming' },
+                { label: 'Прошедшие', value: 'past' },
+                { label: 'Все', value: 'all' },
+              ]}
+            />
+            <Text size="xs" c="dimmed">
+              Найдено: {filteredCompetitions.length}
+            </Text>
+          </Group>
+        </Paper>
+
+        {/* Карта */}
+        <Paper withBorder radius="md" p="sm" style={{ position: 'relative' }}>
+          {!canCreateCompetition && (
+            <Text size="sm" c="dimmed" mb="sm" ta="center">
+              Для создания соревнований требуется роль организатора или администратора
+            </Text>
+          )}
+          <MapContainer center={MINSK} zoom={12} style={{ height: 700, width: '100%', zIndex: 1 }}>
           <TileLayer
             attribution="&copy; OpenStreetMap contributors"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {competitions?.map((c) => (
+          {filteredCompetitions?.map((c) => (
             <Marker 
               key={c.id} 
               position={[c.lat, c.lng]}
@@ -115,7 +165,9 @@ export default function MapPage() {
           {tempMarker && (
             <Marker position={tempMarker as unknown as LatLngExpression} />
           )}
-          <MapClickHandler onClick={(latlng) => { setTempMarker(latlng); openDrawer() }} />
+          {canCreateCompetition && (
+            <MapClickHandler onClick={(latlng) => { setTempMarker(latlng); openDrawer() }} />
+          )}
         </MapContainer>
       </Paper>
       <Drawer
@@ -205,18 +257,22 @@ export default function MapPage() {
                       <Button size="sm" variant="filled" component={Link} to={`/competition/${viewingCompetition.id}`}>
                         Открыть страницу соревнования
                       </Button>
-                      <Button size="sm" variant="light" onClick={() => {
-                        handleCloseViewDrawer()
-                        openEditModal(viewingCompetition)
-                      }}>
-                        Редактировать
-                      </Button>
-                      <Button size="sm" variant="light" color="red" onClick={() => {
-                        handleCloseViewDrawer()
-                        openDeleteConfirm(viewingCompetition)
-                      }}>
-                        Удалить
-                      </Button>
+                      {canCreateCompetition && (
+                        <>
+                          <Button size="sm" variant="light" onClick={() => {
+                            handleCloseViewDrawer()
+                            openEditModal(viewingCompetition)
+                          }}>
+                            Редактировать
+                          </Button>
+                          <Button size="sm" variant="light" color="red" onClick={() => {
+                            handleCloseViewDrawer()
+                            openDeleteConfirm(viewingCompetition)
+                          }}>
+                            Удалить
+                          </Button>
+                        </>
+                      )}
                     </Group>
                   </Stack>
                 </Tabs.Panel>
@@ -230,6 +286,7 @@ export default function MapPage() {
               </Tabs>
             )}
           </Drawer>
+      </Stack>
     </Container>
   )
 }

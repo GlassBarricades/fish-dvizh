@@ -11,7 +11,8 @@ export type CompetitionRole = {
 
 export type AssignRoleInput = {
   competition_id: string
-  user_id: string
+  user_id?: string
+  email?: string
   role: CompetitionRoleType
 }
 

@@ -50,14 +50,31 @@ export async function listCompetitionRoles(competitionId: string): Promise<Compe
 }
 
 export async function assignCompetitionRole(input: AssignRoleInput): Promise<void> {
+  let userId = input.user_id
+
+  // Если передан email, находим пользователя
+  if (!userId && input.email) {
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', input.email)
+      .maybeSingle()
+    
+    if (userError) throw userError
+    if (!userData) throw new Error('Пользователь с таким email не найден')
+    userId = userData.id
+  }
+
+  if (!userId) throw new Error('Необходимо указать user_id или email')
+
   if (input.role === 'zone_judge') {
-    const { error } = await supabase.from('competition_judges').upsert({ competition_id: input.competition_id, user_id: input.user_id }, { onConflict: 'competition_id,user_id' })
+    const { error } = await supabase.from('competition_judges').upsert({ competition_id: input.competition_id, user_id: userId }, { onConflict: 'competition_id,user_id' })
     if (error) throw error
     return
   }
   const { error } = await supabase
     .from(TABLE)
-    .upsert({ competition_id: input.competition_id, user_id: input.user_id, role: input.role }, { onConflict: 'competition_id,user_id,role' })
+    .upsert({ competition_id: input.competition_id, user_id: userId, role: input.role }, { onConflict: 'competition_id,user_id,role' })
   if (error) throw error
 }
 

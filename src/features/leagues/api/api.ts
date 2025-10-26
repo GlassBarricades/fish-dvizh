@@ -772,10 +772,12 @@ export async function fetchCompetitionLeagues(competitionId: string): Promise<an
       leagues!inner(*)
     `)
     .eq('competition_id', competitionId)
-    .order('leagues.name', { ascending: true })
 
   if (error) throw error
-  return data?.map(item => item.leagues) || []
+  
+  // Сортируем массив в JavaScript, так как Supabase не поддерживает сортировку по связанным таблицам
+  const leagues = data?.map(item => item.leagues) || []
+  return leagues.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
 }
 
 // === ПРИГЛАШЕНИЯ В ЛИГИ ===

@@ -2,6 +2,7 @@ import { Badge, Card, Group, Loader, Select, Table, Text, Title } from '@mantine
 import { useAdminUsers, useUpdateUserRole } from '@/features/admin/hooks'
 import type { Role } from '@/features/auth/roles'
 import { notifications } from '@mantine/notifications'
+import { Avatar } from '@/components/Avatar'
 
 export default function AdminUsersPage() {
   const { data, isLoading, isError, error } = useAdminUsers()
@@ -26,9 +27,12 @@ export default function AdminUsersPage() {
         <Table striped highlightOnHover withTableBorder withColumnBorders>
           <Table.Thead>
             <Table.Tr>
+              <Table.Th>Аватар</Table.Th>
               <Table.Th>Email</Table.Th>
+              <Table.Th>Имя</Table.Th>
+              <Table.Th>Фамилия</Table.Th>
+              <Table.Th>Дата рождения</Table.Th>
               <Table.Th>Роль</Table.Th>
-              <Table.Th>Никнейм</Table.Th>
               <Table.Th>Телефон</Table.Th>
               <Table.Th>Создан</Table.Th>
             </Table.Tr>
@@ -36,7 +40,13 @@ export default function AdminUsersPage() {
           <Table.Tbody>
             {data?.map((u) => (
               <Table.Tr key={u.id}>
+                <Table.Td>
+                  <Avatar src={u.avatar} size={40} />
+                </Table.Td>
                 <Table.Td>{u.email}</Table.Td>
+                <Table.Td>{u.first_name ?? '-'}</Table.Td>
+                <Table.Td>{u.last_name ?? '-'}</Table.Td>
+                <Table.Td>{u.birth_date ? new Date(u.birth_date).toLocaleDateString('ru-RU') : '-'}</Table.Td>
                 <Table.Td>
                   <Group gap="xs">
                     <Badge variant="light">{u.role ?? 'user'}</Badge>
@@ -54,7 +64,6 @@ export default function AdminUsersPage() {
                     />
                   </Group>
                 </Table.Td>
-                <Table.Td>{u.nickname ?? '-'}</Table.Td>
                 <Table.Td>{u.phone ?? '-'}</Table.Td>
                 <Table.Td>{new Date(u.created_at).toLocaleString()}</Table.Td>
               </Table.Tr>
