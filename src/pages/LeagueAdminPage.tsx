@@ -13,22 +13,19 @@ import {
   Table,
   Avatar,
   ThemeIcon,
-  Progress,
   Select,
   Grid,
   Card,
   ActionIcon,
-  Tooltip,
   Modal,
   TextInput,
-  Textarea,
-  NumberInput
+  Textarea
 } from '@mantine/core'
-import { IconTrophy, IconMedal, IconCrown, IconUsers, IconCalendar, IconSettings, IconPlus, IconEdit, IconDownload, IconTrash, IconMail, IconBell } from '@tabler/icons-react'
+import { IconTrophy, IconMedal, IconCrown, IconPlus, IconEdit, IconDownload, IconTrash, IconMail, IconBell } from '@tabler/icons-react'
 import { useAuth } from '@/features/auth/hooks'
 import { useLeague, useLeagueRating, useJoinLeague, useLeaveLeague, useIsUserInLeague, useLinkCompetitionsToLeague, useUpdateLeague, useDeleteLeague, useRatingConfigs } from '@/features/leagues/hooks'
 import { useExportLeagueRating } from '@/features/export/hooks'
-import { useCompetitions, useUpdateCompetition } from '@/features/competitions/hooks'
+import { useCompetitions } from '@/features/competitions/hooks'
 import { LeagueImageUploader } from '@/components/ImageUploader'
 import { InvitationManagement } from '@/features/leagues/components/InvitationManagement'
 import { NotificationManagement } from '@/features/notifications/components/NotificationManagement'
@@ -58,12 +55,11 @@ export default function LeaguePage() {
   })
 
   const { data: league, isLoading: leagueLoading } = useLeague(leagueId)
-  const { data: ratingConfig } = useRatingConfigs()
   const { data: rating, isLoading: ratingLoading } = useLeagueRating({ 
     league_id: leagueId!,
     class: selectedClass as any
   })
-  const { isParticipating, participation } = useIsUserInLeague(leagueId, user?.id)
+  const { isParticipating } = useIsUserInLeague(leagueId, user?.id)
   
   const joinLeague = useJoinLeague()
   const leaveLeague = useLeaveLeague()
@@ -563,8 +559,8 @@ export default function LeaguePage() {
           <Text size="sm" c="dimmed">Выберите соревнования, которые нужно привязать к этой лиге.</Text>
           <Select
             data={(competitions || [])
-              .filter((c) => !c.league_id || c.league_id === league.id)
-              .map((c) => ({ value: c.id, label: `${c.title} — ${dayjs(c.starts_at).format('DD.MM.YYYY')}` }))}
+              .filter((c: any) => !c.league_id || c.league_id === league.id)
+              .map((c: any) => ({ value: c.id, label: `${c.title} — ${dayjs(c.starts_at).format('DD.MM.YYYY')}` }))}
             value={null}
             onChange={(val) => {
               if (val && !selectedCompetitions.includes(val)) {
@@ -579,7 +575,7 @@ export default function LeaguePage() {
             <Paper withBorder radius="md" p="sm">
               <Stack gap={4}>
                 {selectedCompetitions.map((id) => {
-                  const comp = (competitions || []).find((c) => c.id === id)
+                  const comp = (competitions || []).find((c: any) => c.id === id)
                   return (
                     <Group key={id} justify="space-between">
                       <Text size="sm">{comp?.title || id}</Text>

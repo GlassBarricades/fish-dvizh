@@ -15,7 +15,7 @@ import {
   type CreateInvitationInput,
   type AcceptInvitationInput,
   type LeagueInvitation
-} from '../api/api'
+} from './league_invitations_api'
 
 // === ПРИГЛАШЕНИЯ В ЛИГИ ===
 
@@ -43,7 +43,7 @@ export function useCreateLeagueInvitation() {
 
   return useMutation({
     mutationFn: createLeagueInvitation,
-    onSuccess: (data) => {
+    onSuccess: (data: LeagueInvitation) => {
       queryClient.invalidateQueries({ queryKey: ['league-invitations', data.league_id] })
       notifications.show({
         color: 'green',
@@ -67,7 +67,7 @@ export function useAcceptLeagueInvitation() {
 
   return useMutation({
     mutationFn: acceptLeagueInvitation,
-    onSuccess: (_, variables) => {
+    onSuccess: (_, variables: AcceptInvitationInput) => {
       queryClient.invalidateQueries({ queryKey: ['invitation', variables.token] })
       queryClient.invalidateQueries({ queryKey: ['league-participants'] })
       queryClient.invalidateQueries({ queryKey: ['user-league-participations'] })
@@ -146,7 +146,7 @@ export function useResendLeagueInvitation() {
 
   return useMutation({
     mutationFn: resendLeagueInvitation,
-    onSuccess: (data) => {
+    onSuccess: (data: LeagueInvitation) => {
       queryClient.invalidateQueries({ queryKey: ['league-invitations', data.league_id] })
       notifications.show({
         color: 'green',
@@ -171,7 +171,7 @@ export function useCreateBulkLeagueInvitations() {
   return useMutation({
     mutationFn: ({ leagueId, emails, invitedBy }: { leagueId: string, emails: string[], invitedBy: string }) =>
       createBulkLeagueInvitations(leagueId, emails, invitedBy),
-    onSuccess: (data, variables) => {
+    onSuccess: (data: LeagueInvitation[], variables) => {
       queryClient.invalidateQueries({ queryKey: ['league-invitations', variables.leagueId] })
       notifications.show({
         color: 'green',

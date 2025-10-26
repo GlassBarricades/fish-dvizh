@@ -23,7 +23,6 @@ export default function CompetitionPage() {
   const { competitionId } = useParams()
   const { user } = useAuth()
   const { data: competition } = useCompetition(competitionId!)
-  const { data: competitionLeagues } = useCompetitionLeagues(competitionId!)
   const { data: teamSizes } = useTeamSizes()
 
   if (!competitionId) return <Text>Нет соревнования</Text>

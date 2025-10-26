@@ -20,16 +20,8 @@ import {
   updateBonusSystemConfig
 } from '../api/api'
 import type {
-  Bonus,
-  SpecialRule,
-  UserBonus,
-  CreateBonusInput,
   UpdateBonusInput,
-  CreateSpecialRuleInput,
-  UpdateSpecialRuleInput,
-  BonusApplicationResult,
-  BonusStats,
-  BonusSystemConfig
+  UpdateSpecialRuleInput
 } from '../model/types'
 
 // === УПРАВЛЕНИЕ БОНУСАМИ ===

@@ -8,12 +8,7 @@ import {
   getExportStats
 } from '../api/api'
 import type {
-  LeagueRatingExport,
-  CompetitionResultsExport,
-  UserStatsExport,
-  AchievementsExport,
-  ExportResult,
-  ExportStats
+  ExportResult
 } from '../model/types'
 
 // === ЭКСПОРТ РЕЙТИНГА ЛИГИ ===

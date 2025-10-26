@@ -1,7 +1,7 @@
 // Страница принятия приглашения в лигу
 // Создайте файл src/pages/InvitationPage.tsx
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Container,
@@ -16,19 +16,15 @@ import {
   Loader,
   Center,
   Card,
-  Avatar,
-  Divider
+  Avatar
 } from '@mantine/core'
 import {
   IconCheck,
   IconX,
   IconClock,
   IconAlertCircle,
-  IconTrophy,
-  IconUsers,
-  IconCalendar
+  IconTrophy
 } from '@tabler/icons-react'
-import { notifications } from '@mantine/notifications'
 import { useAuth } from '@/features/auth/hooks'
 import { useInvitationByToken, useAcceptLeagueInvitation, useDeclineLeagueInvitation } from '@/features/leagues/model/hooks'
 import { useLeague } from '@/features/leagues/hooks'

@@ -3,7 +3,6 @@ import type {
   Bonus,
   SpecialRule,
   UserBonus,
-  UserSpecialRule,
   CreateBonusInput,
   UpdateBonusInput,
   CreateSpecialRuleInput,
@@ -383,7 +382,7 @@ async function getUserConsecutiveWins(userId: string): Promise<number> {
     .sort(([, a], [, b]) => b - a)
 
   for (let i = 0; i < sortedCompetitions.length; i++) {
-    const [competitionId, weight] = sortedCompetitions[i]
+    const [competitionId, _weight] = sortedCompetitions[i]
     const userWeight = competitionWeights.get(competitionId) || 0
     
     // Проверяем, выиграл ли пользователь это соревнование
@@ -433,7 +432,7 @@ async function applyBonus(
 ): Promise<BonusApplicationResult | null> {
   try {
     // Предоставляем бонус пользователю
-    const userBonus = await grantBonusToUser(userId, bonus.id)
+    await grantBonusToUser(userId, bonus.id)
 
     const result: BonusApplicationResult = {
       bonus_id: bonus.id,
@@ -480,7 +479,7 @@ export async function getBonusStats(): Promise<BonusStats> {
     .from('bonuses')
     .select('*')
 
-  const { data: userBonuses } = await supabase
+  const { data: _userBonuses } = await supabase
     .from('user_bonuses')
     .select('*')
     .gte('earned_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()) // За последнюю неделю

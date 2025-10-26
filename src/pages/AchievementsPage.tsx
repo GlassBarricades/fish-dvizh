@@ -24,11 +24,9 @@ import { useAuth } from '@/features/auth/hooks'
 import { 
   useAchievements, 
   useCreateAchievement, 
-  useUpdateAchievement, 
   useDeleteAchievement,
   useRewards,
   useCreateReward,
-  useUpdateReward,
   useDeleteReward
 } from '@/features/achievements/hooks'
 
@@ -36,11 +34,7 @@ export default function AchievementsPage() {
   const { role } = useAuth()
   const [activeTab, setActiveTab] = useState<string>('achievements')
   const [createAchievementModalOpened, setCreateAchievementModalOpened] = useState(false)
-  const [editAchievementModalOpened, setEditAchievementModalOpened] = useState(false)
   const [createRewardModalOpened, setCreateRewardModalOpened] = useState(false)
-  const [editRewardModalOpened, setEditRewardModalOpened] = useState(false)
-  const [editingAchievement, setEditingAchievement] = useState<any>(null)
-  const [editingReward, setEditingReward] = useState<any>(null)
 
   // Состояние для создания достижения
   const [newAchievement, setNewAchievement] = useState({
@@ -66,10 +60,8 @@ export default function AchievementsPage() {
   const { data: achievements, isLoading: achievementsLoading } = useAchievements()
   const { data: rewards, isLoading: rewardsLoading } = useRewards()
   const createAchievement = useCreateAchievement()
-  const updateAchievement = useUpdateAchievement()
   const deleteAchievement = useDeleteAchievement()
   const createReward = useCreateReward()
-  const updateReward = useUpdateReward()
   const deleteReward = useDeleteReward()
 
   const handleCreateAchievement = async () => {
@@ -88,17 +80,6 @@ export default function AchievementsPage() {
     })
   }
 
-  const handleEditAchievement = async () => {
-    if (!editingAchievement || !editingAchievement.name) return
-
-    await updateAchievement.mutateAsync({
-      achievementId: editingAchievement.id,
-      input: editingAchievement
-    })
-    setEditAchievementModalOpened(false)
-    setEditingAchievement(null)
-  }
-
   const handleCreateReward = async () => {
     if (!newReward.name) return
 
@@ -112,17 +93,6 @@ export default function AchievementsPage() {
       rarity: 'common',
       conditions: []
     })
-  }
-
-  const handleEditReward = async () => {
-    if (!editingReward || !editingReward.name) return
-
-    await updateReward.mutateAsync({
-      rewardId: editingReward.id,
-      input: editingReward
-    })
-    setEditRewardModalOpened(false)
-    setEditingReward(null)
   }
 
   const getRarityColor = (rarity: string) => {
@@ -264,8 +234,7 @@ export default function AchievementsPage() {
                               variant="light" 
                               color="blue"
                               onClick={() => {
-                                setEditingAchievement(achievement)
-                                setEditAchievementModalOpened(true)
+                                // TODO: Implement edit functionality
                               }}
                             >
                               <IconEdit size={16} />
@@ -359,8 +328,7 @@ export default function AchievementsPage() {
                               variant="light" 
                               color="blue"
                               onClick={() => {
-                                setEditingReward(reward)
-                                setEditRewardModalOpened(true)
+                                // TODO: Implement edit functionality
                               }}
                             >
                               <IconEdit size={16} />

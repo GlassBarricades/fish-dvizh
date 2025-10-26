@@ -19,14 +19,9 @@ import {
   checkAndAwardRewards
 } from '../api/api'
 import type {
-  Achievement,
-  UserAchievement,
-  UserAchievementStats,
   CreateAchievementInput,
   UpdateAchievementInput,
   AchievementFilters,
-  Reward,
-  UserReward,
   CreateRewardInput,
   UpdateRewardInput
 } from '../model/types'

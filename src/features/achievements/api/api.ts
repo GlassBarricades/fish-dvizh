@@ -292,22 +292,22 @@ function checkCondition(value: number, operator: string, targetValue: number): b
 }
 
 // Вспомогательные функции для получения статистики пользователя
-async function getUserWinsCount(userId: string, context: any): Promise<number> {
+async function getUserWinsCount(_userId: string, _context: any): Promise<number> {
   // Реализация получения количества побед
   return 0
 }
 
-async function getUserCompetitionsCount(userId: string, context: any): Promise<number> {
+async function getUserCompetitionsCount(_userId: string, _context: any): Promise<number> {
   // Реализация получения количества соревнований
   return 0
 }
 
-async function getUserTotalWeight(userId: string, context: any): Promise<number> {
+async function getUserTotalWeight(_userId: string, _context: any): Promise<number> {
   // Реализация получения общего веса
   return 0
 }
 
-async function getUserConsecutiveWins(userId: string, context: any): Promise<number> {
+async function getUserConsecutiveWins(_userId: string, _context: any): Promise<number> {
   // Реализация получения побед подряд
   return 0
 }
@@ -464,7 +464,7 @@ export async function checkAndAwardRewards(userId: string, leagueId: string, sea
   return newRewards
 }
 
-async function checkRewardConditions(reward: Reward, userId: string, leagueId: string, season: string): Promise<boolean> {
+async function checkRewardConditions(reward: Reward, userId: string, leagueId: string, _season: string): Promise<boolean> {
   // Логика проверки условий награды
   // Аналогично достижениям, но для наград
   

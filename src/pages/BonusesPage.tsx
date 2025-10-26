@@ -7,10 +7,8 @@ import {
   Group,
   Modal,
   NumberInput,
-  Paper,
   Select,
   Stack,
-  Switch,
   Table,
   Text,
   TextInput,
@@ -21,8 +19,7 @@ import {
   ActionIcon,
   Tooltip,
   Tabs,
-  Alert,
-  Divider
+  Alert
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { IconPlus, IconEdit, IconTrash, IconInfoCircle, IconGift, IconSettings } from '@tabler/icons-react'

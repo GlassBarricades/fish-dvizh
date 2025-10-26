@@ -1,6 +1,5 @@
 import { supabase } from '@/lib/supabaseClient'
 import type { 
-  ExportFormat,
   ExportConfig,
   LeagueRatingExport,
   CompetitionResultsExport,
@@ -373,7 +372,7 @@ async function generateExportFile(data: any[], config: ExportConfig, filename: s
   }
 }
 
-function generateCSV(data: any[], filename: string): string {
+function generateCSV(data: any[], _filename: string): string {
   if (data.length === 0) return ''
   
   const headers = Object.keys(data[0])
@@ -398,7 +397,7 @@ function generatePDF(data: any[], filename: string): string {
   return generateJSON(data, filename)
 }
 
-function generateJSON(data: any[], filename: string): string {
+function generateJSON(data: any[], _filename: string): string {
   const jsonContent = JSON.stringify(data, null, 2)
   const blob = new Blob([jsonContent], { type: 'application/json' })
   return URL.createObjectURL(blob)

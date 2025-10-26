@@ -6,22 +6,17 @@ import {
   Checkbox,
   Container,
   Group,
-  NumberInput,
-  Paper,
   Select,
   Stack,
   Text,
-  TextInput,
   Title,
   Grid,
   Badge,
-  Divider,
   Alert,
   ActionIcon,
   Tooltip
 } from '@mantine/core'
-import { DatePickerInput } from '@mantine/dates'
-import { IconDownload, IconFileExport, IconInfoCircle } from '@tabler/icons-react'
+import { IconDownload, IconInfoCircle } from '@tabler/icons-react'
 import { useExportWithDownload, useExportStats } from '@/features/export/hooks'
 import { useActiveLeagues } from '@/features/leagues/hooks'
 import { useUpcomingCompetitions } from '@/features/competitions/model/hooks'
